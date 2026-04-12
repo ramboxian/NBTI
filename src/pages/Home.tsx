@@ -8,22 +8,33 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Force loaded state after 3 seconds as a fallback
-    // In case video loading events fail or network is too slow
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Ensure muted is set on the DOM node for iOS autoplay policies
+    video.muted = true;
+    
+    // Explicitly trigger play
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay was prevented. 
+        // Even if prevented, we can still show the first frame.
+      });
+    }
+
+    // Force loaded state after 5 seconds as an absolute fallback
     const timeoutId = setTimeout(() => {
       setIsVideoLoaded(true);
-    }, 3000);
+    }, 5000);
 
     const checkVideoState = () => {
-      if (videoRef.current && videoRef.current.readyState >= 3) {
+      if (video.readyState >= 3) { // HAVE_FUTURE_DATA
         setIsVideoLoaded(true);
       }
     };
 
-    // Check immediately
     checkVideoState();
-    
-    // Check periodically as a backup
     const intervalId = setInterval(checkVideoState, 500);
 
     return () => {
@@ -87,10 +98,11 @@ export default function Home() {
           loop 
           muted 
           playsInline
+          onLoadedData={() => setIsVideoLoaded(true)}
           onCanPlay={() => setIsVideoLoaded(true)}
           className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-multiply"
         >
-          <source src="https://lf3-static.bytednsdoc.com/obj/eden-cn/evithyeh7vibfuhpe/排行榜/首页视频.mp4" type="video/mp4" />
+          <source src="https://lf3-static.bytednsdoc.com/obj/eden-cn/evithyeh7vibfuhpe/%E6%8E%92%E8%A1%8C%E6%A6%9C/%E9%A6%96%E9%A1%B5%E8%A7%86%E9%A2%91.mp4" type="video/mp4" />
         </video>
         
         {/* Click indication text overlay */}
