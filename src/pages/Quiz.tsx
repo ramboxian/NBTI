@@ -194,15 +194,6 @@ export default function Quiz() {
     }, 200); // Add a tiny delay so the user sees their selection highlight before moving
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentIndex > 0) {
-      // We do NOT modify history or answers when going back.
-      // We just change the view. The score will be re-calculated correctly when they pick an option.
-      setDirection(-1);
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
   const variants = {
     enter: (direction: number) => {
       return {
