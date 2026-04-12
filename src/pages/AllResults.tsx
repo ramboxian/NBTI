@@ -25,7 +25,7 @@ export default function AllResults() {
   const bottomButtonRoute = isFromHome ? '/quiz' : '/';
 
   return (
-    <div className="w-full h-[100dvh] bg-[#1a1817] text-[#f4f0ea] flex flex-col relative overflow-hidden">
+    <div className="w-full min-h-[100dvh] bg-[#1a1817] text-[#f4f0ea] flex flex-col relative overflow-x-hidden overflow-y-auto no-scrollbar pb-12">
       {/* Background Texture Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-screen bg-[url('https://www.transparenttextures.com/patterns/stucco.png')]"></div>
 
@@ -142,7 +142,7 @@ export default function AllResults() {
       </div>
 
       {/* Bottom Action Button */}
-      <div className="pb-12 pt-6 w-full flex justify-center relative z-10 px-6">
+      <div className="pt-6 w-full flex justify-center relative z-10 px-6 shrink-0 mt-auto">
         <button 
           onClick={() => navigate(bottomButtonRoute)} 
           className="group relative w-full max-w-[320px] h-14 bg-[#f4f0ea] text-[#1a1817] rounded-none font-sans text-[11px] uppercase tracking-[0.3em] overflow-hidden transition-all duration-300 active:scale-[0.98] shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
