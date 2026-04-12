@@ -227,7 +227,7 @@ export default function Quiz() {
       <VintageFrameOverlay />
       
       {/* Question Number & Progress - Moved to Top */}
-      <div className="w-full flex flex-col items-center justify-center font-sans -mt-[20px] mb-[20px] relative z-10">
+      <div className="w-full flex flex-col items-center justify-center font-sans mb-8 relative z-10 pt-4">
         <span className="text-[12px] uppercase tracking-[0.2em] opacity-50 mb-3">
           Question {currentIndex + 1 < 10 ? `0${currentIndex + 1}` : currentIndex + 1} / {questions.length}
         </span>
@@ -241,8 +241,8 @@ export default function Quiz() {
         </div>
       </div>
       
-      {/* Question Content Area - Moved up by 116px (60px + 56px) */}
-      <div className="flex-1 w-full max-w-md flex flex-col justify-center relative z-10 -mt-[116px]">
+      {/* Question Content Area */}
+      <div className="flex-1 w-full max-w-md flex flex-col justify-start relative z-10">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentIndex}
@@ -256,17 +256,17 @@ export default function Quiz() {
               opacity: { duration: 0.4 },
               filter: { duration: 0.4 }
             }}
-            className="w-full h-full flex flex-col"
+            className="w-full flex flex-col"
           >
             {/* Question at the top */}
-            <div className="mb-4">
+            <div className="mb-6">
               <h2 className="font-serif text-[20px] leading-[1.4] tracking-wide text-ink font-normal">
                 {currentQuestion.title}
               </h2>
             </div>
 
             {/* Options */}
-            <div className="flex flex-col gap-0 mt-auto mb-auto border-t-[0.5px] border-ink/20">
+            <div className="flex flex-col gap-0 border-t-[0.5px] border-ink/20">
               {currentQuestion.options.map((opt) => {
                 const isSelected = answers[currentIndex] === opt.id;
                 
