@@ -268,8 +268,8 @@ export default function Quiz() {
             className="w-full h-full flex flex-col"
           >
             {/* Question at the top */}
-            <div className="mb-6">
-              <h2 className="font-serif text-[24px] leading-[1.4] tracking-wide text-ink font-normal">
+            <div className="mb-4">
+              <h2 className="font-serif text-[20px] leading-[1.4] tracking-wide text-ink font-normal">
                 {currentQuestion.title}
               </h2>
             </div>
@@ -283,13 +283,13 @@ export default function Quiz() {
                   <button
                     key={opt.id}
                     onClick={() => handleOptionClick(opt.id, opt.scores)}
-                    className={`group flex items-start text-left py-6 border-b-[0.5px] border-ink/20 transition-all duration-500 hover:bg-[#ebe6d8]/50 relative overflow-hidden ${isSelected ? 'bg-ink/5' : ''}`}
+                    className={`group flex items-start text-left py-4 border-b-[0.5px] border-ink/20 transition-all duration-500 hover:bg-[#ebe6d8]/50 relative overflow-hidden ${isSelected ? 'bg-ink/5' : ''}`}
                   >
-                    <span className={`font-serif text-[20px] italic w-12 shrink-0 pt-0.5 transition-opacity duration-500 text-center ${isSelected ? 'opacity-100 font-bold' : 'opacity-50 group-hover:opacity-100'}`}>
+                    <span className={`font-serif text-[16px] italic w-10 shrink-0 pt-0 transition-opacity duration-500 text-center ${isSelected ? 'opacity-100 font-bold' : 'opacity-50 group-hover:opacity-100'}`}>
                       {opt.id}.
                     </span>
                     
-                    <span className={`font-serif text-[16px] leading-relaxed transition-colors duration-500 pr-4 ${isSelected ? 'text-ink font-medium' : 'text-ink/80 group-hover:text-ink font-normal'}`}>
+                    <span className={`font-serif text-[15px] leading-relaxed transition-colors duration-500 pr-4 ${isSelected ? 'text-ink font-medium' : 'text-ink/80 group-hover:text-ink font-normal'}`}>
                       {opt.text}
                     </span>
                     
