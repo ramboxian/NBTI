@@ -222,29 +222,31 @@ export default function Quiz() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
-      className="min-h-[100dvh] flex flex-col items-center bg-canvas text-ink px-6 sm:px-10 py-16 relative overflow-hidden"
+      className="min-h-[100dvh] flex flex-col items-center bg-canvas text-ink px-[32px] sm:px-[48px] py-16 relative overflow-hidden"
     >
       <VintageFrameOverlay />
       
-      {/* Question Number & Progress - Moved to Top */}
-      <div className="w-full flex flex-col items-center justify-center font-sans mb-8 relative z-10 pt-4">
-        <span className="text-[12px] uppercase tracking-[0.2em] opacity-50 mb-3">
-          Question {currentIndex + 1 < 10 ? `0${currentIndex + 1}` : currentIndex + 1} / {questions.length}
-        </span>
-        <div className="w-48 h-[1px] bg-ink/10">
-          <motion.div 
-            className="h-full bg-ink/40"
-            initial={{ width: 0 }}
-            animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-            transition={{ duration: 0.5 }}
-          />
+      {/* Container to shift everything up by 30px */}
+      <div className="w-full flex-1 flex flex-col items-center relative z-10 -mt-[30px]">
+        {/* Question Number & Progress - Moved to Top */}
+        <div className="w-full flex flex-col items-center justify-center font-sans mb-8 pt-4">
+          <span className="text-[12px] uppercase tracking-[0.2em] opacity-50 mb-3">
+            Question {currentIndex + 1 < 10 ? `0${currentIndex + 1}` : currentIndex + 1} / {questions.length}
+          </span>
+          <div className="w-48 h-[1px] bg-ink/10">
+            <motion.div 
+              className="h-full bg-ink/40"
+              initial={{ width: 0 }}
+              animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
         </div>
-      </div>
-      
-      {/* Question Content Area */}
-      <div className="flex-1 w-full max-w-md flex flex-col justify-start relative z-10">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.div
+        
+        {/* Question Content Area */}
+        <div className="flex-1 w-full max-w-md flex flex-col justify-start">
+          <AnimatePresence initial={false} custom={direction} mode="wait">
+            <motion.div
             key={currentIndex}
             custom={direction}
             variants={variants}
@@ -292,6 +294,7 @@ export default function Quiz() {
             </div>
           </motion.div>
         </AnimatePresence>
+        </div>
       </div>
     </motion.div>
   );
