@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { questions } from '../data/questions';
@@ -224,8 +224,6 @@ export default function Quiz() {
       };
     }
   };
-
-  const progress = ((currentIndex + 1) / questions.length) * 100;
 
   return (
     <motion.div 
