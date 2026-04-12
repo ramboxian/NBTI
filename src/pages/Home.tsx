@@ -90,7 +90,7 @@ export default function Home() {
           onCanPlay={() => setIsVideoLoaded(true)}
           className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-multiply"
         >
-          <source src="/首页视频.mp4" type="video/mp4" />
+          <source src="https://lf3-static.bytednsdoc.com/obj/eden-cn/evithyeh7vibfuhpe/排行榜/首页视频.mp4" type="video/mp4" />
         </video>
         
         {/* Click indication text overlay */}
