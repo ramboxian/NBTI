@@ -30,18 +30,42 @@ export default function Home() {
       video.addEventListener('playing', handleVideoReady);
     }
 
-    // Force load and explicitly trigger play
-    video.load();
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((err) => {
-        console.log('Autoplay prevented:', err);
-        // Even if autoplay is prevented, the video element is usually loaded and ready
-        handleVideoReady(); 
-      });
+    // Function to attempt playback
+    const attemptPlay = () => {
+      if (!video) return;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.log('Autoplay prevented:', err);
+          // Even if autoplay is prevented, the video element is usually loaded and ready
+          handleVideoReady(); 
+        });
+      }
+    };
+
+    // Attempt immediately
+    attemptPlay();
+
+    // Special handling for WeChat browser (WeixinJSBridge)
+    // WeChat often blocks autoplay until its JSBridge is ready or a user interacts
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - WeixinJSBridge is injected by WeChat
+      if (window.WeixinJSBridge) {
+        // @ts-ignore
+        window.WeixinJSBridge.invoke('getNetworkType', {}, () => {
+          attemptPlay();
+        });
+      } else {
+        document.addEventListener('WeixinJSBridgeReady', () => {
+          // @ts-ignore
+          window.WeixinJSBridge.invoke('getNetworkType', {}, () => {
+            attemptPlay();
+          });
+        }, false);
+      }
     }
 
-    // Absolute fallback: if network is super slow, just show the page after 4 seconds
+    // Absolute fallback: if network is super slow or browser entirely blocks loading, just show the page after 4 seconds
     const timeoutId = setTimeout(() => {
       handleVideoReady();
     }, 4000);
@@ -112,6 +136,10 @@ export default function Home() {
           loop 
           muted 
           playsInline
+          webkit-playsinline="true"
+          x5-playsinline="true"
+          x5-video-player-type="h5"
+          x5-video-player-fullscreen="false"
           onLoadedData={() => setIsVideoLoaded(true)}
           onCanPlay={() => setIsVideoLoaded(true)}
           className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-multiply"
