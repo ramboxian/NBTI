@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-italic: "Cormorant Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  
+  /* Very premium, warm, sophisticated museum cream - slightly more vintage/yellowish */
+  --color-canvas: #f0ebe1; 
+  /* Deep, warm black/brown for elegant contrast */
+  --color-ink: #2c2822; 
+  --color-ink-light: #6a645a;
+  
+  --color-gold: #b39b5e;
+}
+
+@layer base {
+  body {
+    @apply font-serif text-ink bg-canvas antialiased;
+    background-color: var(--color-canvas);
+  }
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
