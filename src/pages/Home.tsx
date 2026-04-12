@@ -1,8 +1,18 @@
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Home() {
   const navigate = useNavigate();
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // Check if video is already loaded (sometimes it caches)
+    if (videoRef.current && videoRef.current.readyState >= 3) {
+      setIsVideoLoaded(true);
+    }
+  }, []);
 
   return (
     <motion.div 
@@ -12,6 +22,22 @@ export default function Home() {
       transition={{ duration: 1.2, ease: "easeInOut" }}
       className="h-[100dvh] flex flex-col relative overflow-hidden bg-canvas"
     >
+      <AnimatePresence>
+        {!isVideoLoaded && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-canvas"
+          >
+            <div className="w-12 h-12 border-[2px] border-ink/20 border-t-ink rounded-full animate-spin mb-6"></div>
+            <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-ink/70">
+              LOADING
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top Header: Clean, very small, wide tracking - Floating over video */}
       <motion.div 
         initial={{ y: -10, opacity: 0 }}
@@ -32,16 +58,18 @@ export default function Home() {
       {/* Video Section - Flex to fill available space */}
       <motion.div 
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={{ opacity: isVideoLoaded ? 1 : 0 }}
         transition={{ delay: 0.6, duration: 1.5, ease: "easeOut" }}
         className="flex-1 w-full relative z-0 min-h-[20vh] overflow-hidden cursor-pointer"
         onClick={() => navigate('/all', { state: { fromHome: true } })}
       >
         <video 
+          ref={videoRef}
           autoPlay 
           loop 
           muted 
           playsInline
+          onCanPlay={() => setIsVideoLoaded(true)}
           className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-multiply"
         >
           <source src="/首页视频.mp4" type="video/mp4" />
