@@ -302,26 +302,6 @@ export default function Quiz() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Previous Question Button - Only visible after first question */}
-      <AnimatePresence>
-        {currentIndex > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.3 }}
-            className="absolute bottom-10 left-0 w-full flex justify-center z-20"
-          >
-            <button 
-              onClick={handlePreviousQuestion}
-              className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink/50 hover:text-ink px-6 py-2 border border-ink/20 hover:border-ink transition-all duration-300 rounded-none bg-transparent"
-            >
-              上一题
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
