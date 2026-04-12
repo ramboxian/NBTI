@@ -11,35 +11,49 @@ export default function Home() {
     const video = videoRef.current;
     if (!video) return;
 
+    // A robust function to handle when video is ready
+    const handleVideoReady = () => {
+      setIsVideoLoaded(true);
+    };
+
     // Ensure muted is set on the DOM node for iOS autoplay policies
     video.muted = true;
     
-    // Explicitly trigger play
+    // Check if video is already ready (from cache or very fast network)
+    if (video.readyState >= 3) { // HAVE_FUTURE_DATA
+      handleVideoReady();
+    } else {
+      // Attach robust listeners for different ready states
+      video.addEventListener('loadeddata', handleVideoReady);
+      video.addEventListener('canplay', handleVideoReady);
+      video.addEventListener('canplaythrough', handleVideoReady);
+      video.addEventListener('playing', handleVideoReady);
+    }
+
+    // Force load and explicitly trigger play
+    video.load();
     const playPromise = video.play();
     if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Autoplay was prevented. 
-        // Even if prevented, we can still show the first frame.
+      playPromise.catch((err) => {
+        console.log('Autoplay prevented:', err);
+        // Even if autoplay is prevented, the video element is usually loaded and ready
+        handleVideoReady(); 
       });
     }
 
-    // Force loaded state after 5 seconds as an absolute fallback
+    // Absolute fallback: if network is super slow, just show the page after 4 seconds
     const timeoutId = setTimeout(() => {
-      setIsVideoLoaded(true);
-    }, 5000);
-
-    const checkVideoState = () => {
-      if (video.readyState >= 3) { // HAVE_FUTURE_DATA
-        setIsVideoLoaded(true);
-      }
-    };
-
-    checkVideoState();
-    const intervalId = setInterval(checkVideoState, 500);
+      handleVideoReady();
+    }, 4000);
 
     return () => {
       clearTimeout(timeoutId);
-      clearInterval(intervalId);
+      if (video) {
+        video.removeEventListener('loadeddata', handleVideoReady);
+        video.removeEventListener('canplay', handleVideoReady);
+        video.removeEventListener('canplaythrough', handleVideoReady);
+        video.removeEventListener('playing', handleVideoReady);
+      }
     };
   }, []);
 
