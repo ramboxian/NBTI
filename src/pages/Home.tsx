@@ -8,10 +8,28 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Check if video is already loaded (sometimes it caches)
-    if (videoRef.current && videoRef.current.readyState >= 3) {
+    // Force loaded state after 3 seconds as a fallback
+    // In case video loading events fail or network is too slow
+    const timeoutId = setTimeout(() => {
       setIsVideoLoaded(true);
-    }
+    }, 3000);
+
+    const checkVideoState = () => {
+      if (videoRef.current && videoRef.current.readyState >= 3) {
+        setIsVideoLoaded(true);
+      }
+    };
+
+    // Check immediately
+    checkVideoState();
+    
+    // Check periodically as a backup
+    const intervalId = setInterval(checkVideoState, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, []);
 
   return (
