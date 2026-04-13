@@ -1,16 +1,25 @@
 export interface PersonalityResult {
   id: string;
   name: string;
-  slogan: string; // 对应 Slogan
-  description: string; // 对应 🧬 核心画像
-  traits: string[]; // 对应 🦸 被低估的超能力 (可以提取关键词) 和 💀 致命弱点
-  routine: string; // 对应 📅 你的职场日常
-  weakness: string; // 对应 💀 致命弱点
-  colleagueView: string[]; // 对应 🗣️ 同事背后怎么评价你
-  strategy: string[]; // 对应 💣 最容易踩的雷 或 🎯 如果你是...
+  slogan: string;
+  description: string;
+  traits: string[];
+  routine: string;
+  weakness: string;
+  colleagueView: string[];
+  strategy: string[];
   paintingUrl: string;
   themeColor: string;
   textColor: string;
+  stats: {
+    workaholic: number;
+    resilience: number;
+    strategy: number;
+    emotional: number;
+    survival: number;
+  };
+  bestMatch: { name: string; id: string; reason: string };
+  worstMatch: { name: string; id: string; reason: string };
 }
 
 export const resultsData: Record<string, PersonalityResult> = {
@@ -34,7 +43,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/saiboniuma.png',
     themeColor: '#2B4A69', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 95, resilience: 90, strategy: 85, emotional: 60, survival: 50 },
+    bestMatch: { name: '职场貔貅', id: 'N+B-T+', reason: '强强联手！你打江山ta算账，商业互吹间实现利益最大化，所向披靡。' },
+    worstMatch: { name: '摸鱼皇帝', id: 'N-B-T-', reason: '看着ta天天踩点下班还拿全薪，你的血压能当场冲破天灵盖。' }
   },
   'N+B+T-': {
     id: 'N+B+T-',
@@ -56,7 +68,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/juanxincai.png',
     themeColor: '#4A5D4E', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 99, resilience: 80, strategy: 20, emotional: 70, survival: 60 },
+    bestMatch: { name: '天选工具人', id: 'N-B+T-', reason: '苦命兄弟抱团取暖，能在深夜的工位上互相分半桶泡面，感动中国。' },
+    worstMatch: { name: '职场貔貅', id: 'N+B-T+', reason: '掠食关系！ta能用轻飘飘的一句话，把你熬夜三天的功劳全部端走。' }
   },
   'N+B-T+': {
     id: 'N+B-T+',
@@ -78,7 +93,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/zhichangpixiu.png',
     themeColor: '#722F37', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 80, resilience: 40, strategy: 95, emotional: 85, survival: 90 },
+    bestMatch: { name: '赛博牛马', id: 'N+B+T+', reason: '最佳利益共同体！只要目标一致，你们就能联手榨干公司的所有资源。' },
+    worstMatch: { name: '末日狂花', id: 'N+B-T-', reason: '秀才遇上兵，你的精密算盘随时会被ta不顾后果的一拳砸个稀巴烂。' }
   },
   'N+B-T-': {
     id: 'N+B-T-',
@@ -100,7 +118,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/morikuanghua.png',
     themeColor: '#8B4513', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 85, resilience: 30, strategy: 10, emotional: 10, survival: 40 },
+    bestMatch: { name: '不粘锅', id: 'N-B-T+', reason: '奇妙的互补。你在前线疯狂掀桌输出，ta在后方默默递茶煽风点火。' },
+    worstMatch: { name: '赛博牛马', id: 'N+B+T+', reason: '八字不合！ta那股浑然天成的爹味说教和服从性，会让你一秒狂暴。' }
   },
   'N-B+T+': {
     id: 'N-B+T+',
@@ -122,7 +143,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/renjianqingxing.png',
     themeColor: '#5C5A5A', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 30, resilience: 70, strategy: 90, emotional: 95, survival: 99 },
+    bestMatch: { name: '摸鱼皇帝', id: 'N-B-T-', reason: '磁场完美吻合。相视一笑莫逆于心，高端局的顶级摸鱼搭子。' },
+    worstMatch: { name: '卷心菜', id: 'N+B+T-', reason: '看着ta每天被坑还在傻乐，你的智商和良心都受到了严重的暴击。' }
   },
   'N-B+T-': {
     id: 'N-B+T-',
@@ -144,7 +168,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/tianxuangongjuren.png',
     themeColor: '#6B5B45', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 40, resilience: 95, strategy: 10, emotional: 80, survival: 70 },
+    bestMatch: { name: '卷心菜', id: 'N+B+T-', reason: '相互兜底，感动中国。你们俩合伙撑起了这个公司最苦最累的半边天。' },
+    worstMatch: { name: '不粘锅', id: 'N-B-T+', reason: '气运相克！ta闪现躲掉的所有黑锅，最终都会精准制导砸在你的头上。' }
   },
   'N-B-T+': {
     id: 'N-B-T+',
@@ -166,7 +193,10 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/buzhanguo.png',
     themeColor: '#4A6960', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 20, resilience: 10, strategy: 85, emotional: 90, survival: 95 },
+    bestMatch: { name: '人间清醒', id: 'N-B+T+', reason: '只动嘴不动手的精神股东组合，你俩能在茶水间把公司高层分析个透。' },
+    worstMatch: { name: '天选工具人', id: 'N-B+T-', reason: '你的存在让ta倍感痛苦。毕竟你躲掉的活，通常都是ta在含泪干完。' }
   },
   'N-B-T-': {
     id: 'N-B-T-',
@@ -188,6 +218,9 @@ export const resultsData: Record<string, PersonalityResult> = {
     ],
     paintingUrl: '/images/8/moyuhuangdi.png',
     themeColor: '#363636', 
-    textColor: '#e6d8c3'
+    textColor: '#e6d8c3',
+    stats: { workaholic: 5, resilience: 20, strategy: 10, emotional: 99, survival: 80 },
+    bestMatch: { name: '人间清醒', id: 'N-B+T+', reason: '摸鱼界的卧龙凤雏，能心照不宣地交流各楼层厕所的Wi-Fi信号强度。' },
+    worstMatch: { name: '赛博牛马', id: 'N+B+T+', reason: '纯正的资本家工贼！ta那极度内卷的作风，严重破坏了你的摸鱼大环境。' }
   }
 };

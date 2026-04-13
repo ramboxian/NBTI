@@ -121,12 +121,12 @@ export default function Result() {
   
   // 提取单维度彩蛋 (正常逻辑，通过上面的默认高分自动触发)
   const easterEggs: { title: string; desc: string }[] = [];
-  if (scores.N >= 7) easterEggs.push({ title: '🔥 牛马之魂', desc: '你的卷度已超越人类极限。建议检查一下自己是不是被PUA了，或者你其实享受这一切？' });
-  if (scores.N <= -7) easterEggs.push({ title: '🛋️ 究极摸鱼王', desc: '你的摸鱼已臻化境。公司网络一半的流量可能都是你的。不过认真的说——你快乐吗？' });
-  if (scores.B >= 7) easterEggs.push({ title: '🎒 背锅侠本侠', desc: '你已经背了太多锅。提醒一下：靠谱是美德，但不能无限透支。学会说"不"也是一种能力' });
-  if (scores.B <= -7) easterEggs.push({ title: '🏃 闪电甩锅侠', desc: '你的不粘锅属性已满级。任何责任到你这里都会自动反弹。建议偶尔接一个锅——哪怕是空锅' });
-  if (scores.T >= 7) easterEggs.push({ title: '🧠 职场诸葛亮', desc: '你已经活成了一本职场厚黑学。提醒：套路可以有，但真心不能丢。人生不止有KPI' });
-  if (scores.T <= -7) easterEggs.push({ title: '💬 人间直球机', desc: '你的直球程度已经突破大气层。虽然世界需要真诚的人，但偶尔学点"说话的艺术"能救命' });
+  if (scores.N >= 5) easterEggs.push({ title: '🔥 牛马之魂', desc: '你的卷度已超越人类极限。建议检查一下自己是不是被PUA了，或者你其实享受这一切？' });
+  if (scores.N <= -5) easterEggs.push({ title: '🛋️ 究极摸鱼王', desc: '你的摸鱼已臻化境。公司网络一半的流量可能都是你的。不过认真的说——你快乐吗？' });
+  if (scores.B >= 5) easterEggs.push({ title: '🎒 背锅侠本侠', desc: '你已经背了太多锅。提醒一下：靠谱是美德，但不能无限透支。学会说"不"也是一种能力' });
+  if (scores.B <= -5) easterEggs.push({ title: '🏃 闪电甩锅侠', desc: '你的不粘锅属性已满级。任何责任到你这里都会自动反弹。建议偶尔接一个锅——哪怕是空锅' });
+  if (scores.T >= 5) easterEggs.push({ title: '🧠 职场诸葛亮', desc: '你已经活成了一本职场厚黑学。提醒：套路可以有，但真心不能丢。人生不止有KPI' });
+  if (scores.T <= -5) easterEggs.push({ title: '💬 人间直球机', desc: '你的直球程度已经突破大气层。虽然世界需要真诚的人，但偶尔学点"说话的艺术"能救命' });
 
   // 如果需要修改结果对象的逻辑可以在这里进行，比如附带彩蛋内容
   let baseResult = resultsData[resultId];
@@ -173,7 +173,60 @@ export default function Result() {
     </div>
   );
 
-  const renderResultContent = () => (
+  const renderResultContent = () => {
+    // 根据传入的 HEX 颜色生成一个更亮、饱和度更适合图表的同色系颜色
+    const getLighterColor = (hex: string, lightenFactor = 1.5) => {
+      if (!hex) return '#ffffff';
+      hex = hex.replace(/^#/, '');
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      let r = parseInt(hex.substring(0, 2), 16);
+      let g = parseInt(hex.substring(2, 4), 16);
+      let b = parseInt(hex.substring(4, 6), 16);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      let targetLuminance = Math.max(0.6, luminance * lightenFactor);
+      if (luminance < 0.2) targetLuminance = 0.7;
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      l = targetLuminance;
+      s = Math.max(s, 0.4);
+      let r2, g2, b2;
+      if (s === 0) {
+        r2 = g2 = b2 = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1; if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r2 = hue2rgb(p, q, h + 1/3);
+        g2 = hue2rgb(p, q, h);
+        b2 = hue2rgb(p, q, h - 1/3);
+      }
+      const toHex = (x: number) => {
+        const hexStr = Math.round(x * 255).toString(16);
+        return hexStr.length === 1 ? '0' + hexStr : hexStr;
+      };
+      return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
+    };
+
+    const chartColor = getLighterColor(result.themeColor || '#ffffff');
+    
+    return (
     <div 
       style={{ backgroundColor: '#1a1817' }} 
       className="min-h-[100dvh] w-full flex flex-col items-center py-12 px-6 relative"
@@ -218,8 +271,8 @@ export default function Result() {
               "{result.slogan}"
             </p>
             <div className="mt-8 mb-4 font-sans text-[10px] uppercase tracking-[0.2em] opacity-60 flex justify-between w-full px-2">
-              <span>FOR: JANE DOE</span>
-              <span>DATE: 10.05.2026</span>
+              <span>FOR: RAMBOX</span>
+              <span>DATE: {new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')}</span>
             </div>
           </div>
 
@@ -233,20 +286,37 @@ export default function Result() {
              <div className="font-sans text-[9px] uppercase tracking-[0.2em] leading-relaxed">
                N{scores.N > 0 ? '+' : ''}{scores.N} / B{scores.B > 0 ? '+' : ''}{scores.B} / T{scores.T > 0 ? '+' : ''}{scores.T}<br/>
                NBTI ASSESSMENT<br/>
-               Valid for one life
+               VALID FOR ONE LIFE
              </div>
              
-             <div className="flex items-center gap-3">
-               <div className="flex flex-col items-end justify-center">
-                 <span className="font-sans text-[8px] font-bold tracking-[0.1em] uppercase">Scan to test</span>
-                 <span className="font-sans text-[6px] tracking-[0.2em] opacity-70 mt-0.5">扫码测测你的牛马值</span>
-               </div>
-               <div className="w-12 h-12 bg-current rounded-sm flex items-center justify-center">
-                 {/* 简单的 SVG 二维码占位符 */}
-                 <svg viewBox="0 0 24 24" style={{ color: result.themeColor }} className="w-10 h-10">
-                   <path fill="currentColor" d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm13-2h3v2h-3v-2zm-3 0h2v2h-2v-2zm3 3h3v3h-3v-3zm-3 0h2v2h-2v-2zm-3-3h2v2h-2v-2zm0 3h2v2h-2v-2zm-4-3h3v5h-3v-5zm1-7h3v2h-3V7z" />
-                 </svg>
-               </div>
+             <div className="flex flex-col items-end justify-center gap-1.5">
+               {/* 简单的 SVG 条形码 */}
+               <svg viewBox="0 0 100 24" fill="currentColor" className="h-6 w-auto opacity-80">
+                 <rect x="0" y="0" width="3" height="24" />
+                 <rect x="5" y="0" width="1" height="24" />
+                 <rect x="8" y="0" width="4" height="24" />
+                 <rect x="14" y="0" width="2" height="24" />
+                 <rect x="18" y="0" width="1" height="24" />
+                 <rect x="22" y="0" width="4" height="24" />
+                 <rect x="28" y="0" width="1" height="24" />
+                 <rect x="31" y="0" width="3" height="24" />
+                 <rect x="36" y="0" width="1" height="24" />
+                 <rect x="39" y="0" width="2" height="24" />
+                 <rect x="43" y="0" width="4" height="24" />
+                 <rect x="49" y="0" width="2" height="24" />
+                 <rect x="53" y="0" width="1" height="24" />
+                 <rect x="56" y="0" width="3" height="24" />
+                 <rect x="61" y="0" width="4" height="24" />
+                 <rect x="67" y="0" width="1" height="24" />
+                 <rect x="70" y="0" width="2" height="24" />
+                 <rect x="74" y="0" width="4" height="24" />
+                 <rect x="80" y="0" width="1" height="24" />
+                 <rect x="83" y="0" width="3" height="24" />
+                 <rect x="88" y="0" width="2" height="24" />
+                 <rect x="92" y="0" width="4" height="24" />
+                 <rect x="98" y="0" width="2" height="24" />
+               </svg>
+               <span className="font-sans text-[7.5px] font-bold tracking-[0.2em] uppercase opacity-70">Scan to test</span>
              </div>
           </div>
         </div>
@@ -342,6 +412,125 @@ export default function Result() {
 
           <div className="px-2">
             <h2 className="font-serif text-[32px] mb-6 border-b-[0.5px] border-[#f4f0ea]/20 pb-4 flex items-baseline gap-4">
+              Survival Stats
+              <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">职场生存属性</span>
+            </h2>
+            <div className="space-y-3 mt-4 bg-white/5 rounded-xl p-5 border border-white/5">
+              {[
+                { label: '卷王指数', value: result.stats?.workaholic || 0, opacity: 1 },
+                { label: '黑锅抗性', value: result.stats?.resilience || 0, opacity: 0.8 },
+                { label: '套路深浅', value: result.stats?.strategy || 0, opacity: 0.6 },
+                { label: '情绪稳定', value: result.stats?.emotional || 0, opacity: 0.5 },
+                { label: '生存寿命', value: result.stats?.survival || 0, opacity: 0.4 },
+              ].map(stat => (
+                <div key={stat.label} className="flex items-center gap-3">
+                  <span className="w-16 text-[12px] opacity-80 shrink-0">{stat.label}</span>
+                  <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden relative">
+                    <div 
+                      className={`absolute left-0 top-0 h-full rounded-full`} 
+                      style={{ width: `${stat.value}%`, backgroundColor: chartColor, opacity: stat.opacity }}
+                    ></div>
+                  </div>
+                  <span className="w-8 text-[12px] opacity-90 text-right font-mono">{stat.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-2">
+            <h2 className="font-serif text-[32px] mb-6 border-b-[0.5px] border-[#f4f0ea]/20 pb-4 flex items-baseline gap-4">
+              Radar
+              <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">职场人际雷达</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden group">
+                <div className="text-white text-[12px] tracking-wider mb-3 flex items-center gap-1.5 font-medium">
+                  <span className="text-[14px]">🤝</span> 职场天作之合
+                </div>
+                <div className="font-serif text-[20px] text-white mb-2">{result.bestMatch?.name}</div>
+                <div className="text-[13px] opacity-70 leading-relaxed font-light">{result.bestMatch?.reason}</div>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden group">
+                <div className="text-white text-[12px] tracking-wider mb-3 flex items-center gap-1.5 font-medium">
+                  <span className="text-[14px]">☠️</span> 职场命中克星
+                </div>
+                <div className="font-serif text-[20px] text-white mb-2">{result.worstMatch?.name}</div>
+                <div className="text-[13px] opacity-70 leading-relaxed font-light">{result.worstMatch?.reason}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-2">
+            <h2 className="font-serif text-[32px] mb-6 border-b-[0.5px] border-[#f4f0ea]/20 pb-4 flex items-baseline gap-4">
+              Energy Distribution
+              <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">能量分配模型</span>
+            </h2>
+            <div className="mt-4 bg-white/5 rounded-xl p-5 border border-white/5 flex items-center justify-between">
+              <div className="flex flex-col gap-6 w-1/2">
+                {[
+                  { label: '🧠 精神内耗', value: Math.max(10, 100 - (result.stats?.emotional || 50)), opacity: 0.6 },
+                  { label: '💼 实际产出', value: result.stats?.workaholic || 50, opacity: 1 },
+                  { label: '🎣 摸鱼时间', value: Math.max(5, 100 - (result.stats?.workaholic || 50)), opacity: 0.3 }
+                ].map(item => (
+                  <div key={item.label} className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColor, opacity: item.opacity }}></div>
+                      <span className="text-[12px] opacity-80">{item.label}</span>
+                    </div>
+                    <span className="text-[16px] font-mono ml-4 text-[#f4f0ea]/90">{item.value}%</span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* 简易的甜甜圈图 (Donut Chart) */}
+              <div className="w-28 h-28 relative flex items-center justify-center">
+                <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                  {/* Background ring */}
+                  <path
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.05)"
+                    strokeWidth="3"
+                  />
+                  {/* Data rings */}
+                  <path
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke={chartColor}
+                    strokeOpacity="0.6"
+                    strokeWidth="3"
+                    strokeDasharray={`${Math.max(10, 100 - (result.stats?.emotional || 50))}, 100`}
+                  />
+                  <path
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke={chartColor}
+                    strokeOpacity="1"
+                    strokeWidth="3"
+                    strokeDasharray={`${result.stats?.workaholic || 50}, 100`}
+                    strokeDashoffset={`-${Math.max(10, 100 - (result.stats?.emotional || 50))}`}
+                  />
+                  <path
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke={chartColor}
+                    strokeOpacity="0.3"
+                    strokeWidth="3"
+                    strokeDasharray={`${Math.max(5, 100 - (result.stats?.workaholic || 50))}, 100`}
+                    strokeDashoffset={`-${Math.max(10, 100 - (result.stats?.emotional || 50)) + (result.stats?.workaholic || 50)}`}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-[10px] opacity-50 uppercase tracking-widest">Energy</span>
+                  <span className="text-[14px] font-serif mt-0.5 text-[#f4f0ea]/90">100%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-2">
+            <h2 className="font-serif text-[32px] mb-6 border-b-[0.5px] border-[#f4f0ea]/20 pb-4 flex items-baseline gap-4">
               Colleague's View
               <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">同事眼中的你</span>
             </h2>
@@ -409,6 +598,7 @@ export default function Result() {
       </div>
     </div>
   );
+  };
 
   return (
     <div className="relative w-full h-[100dvh] bg-canvas overflow-hidden">
