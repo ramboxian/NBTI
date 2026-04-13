@@ -265,22 +265,6 @@ export default function Result() {
       style={{ backgroundColor: '#1a1817' }} 
       className="min-h-[100dvh] w-full flex flex-col items-center py-12 px-6 relative"
     >
-      {/* Top right export button */}
-      {!isExporting && (
-        <button
-          onClick={handleExport}
-          data-html2canvas-ignore
-          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all shadow-lg backdrop-blur-md"
-          title="Save as Image"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-        </button>
-      )}
-
       {/* Tinted Overlay layer */}
       <div 
         className="absolute inset-0 pointer-events-none"
@@ -679,6 +663,21 @@ export default function Result() {
     <div className="relative w-full h-[100dvh] bg-canvas overflow-hidden">
       {renderLoading()}
       
+      {/* Top right export button (sticky outside the export container) */}
+      {!isExporting && (
+        <button
+          onClick={handleExport}
+          className="fixed top-4 right-4 z-50 p-2.5 rounded-full bg-black/30 border border-white/10 text-white/80 hover:text-white hover:bg-black/50 transition-all shadow-lg backdrop-blur-md"
+          title="Save as Image"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+      )}
+
       <div className={`absolute inset-0 z-10 overflow-y-auto no-scrollbar ${phase === 'loading' ? 'invisible' : 'visible'}`}>
         {renderResultContent()}
       </div>
