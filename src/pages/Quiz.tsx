@@ -3,48 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { questions } from '../data/questions';
 
-// 1:1 严格复刻参考图：经典的小巧精致角花
-const CornerOrnament = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 100 100" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <g strokeLinecap="round" strokeLinejoin="round">
-      {/* 边框直角连线 - 加粗以匹配四周的 1.5px 边框感 */}
-      <path d="M 0 95 L 0 5 C 0 2, 2 0, 5 0 L 95 0" strokeWidth="3" />
-      
-      <g strokeWidth="1.5">
-        {/* 边框连线末端的菱形/小水滴箭头 */}
-        <path d="M 95 0 L 91 -2 L 91 2 Z" fill="currentColor" stroke="none" />
-        <path d="M 0 95 L -2 91 L 2 91 Z" fill="currentColor" stroke="none" />
-
-        {/* 中心向外发散的主藤蔓 (饱满的C形曲线) */}
-        <path d="M 10 10 C 25 25, 30 45, 20 55 C 10 65, 0 50, 10 40 C 15 35, 25 35, 30 45" />
-        
-        {/* 右侧的副藤蔓 (饱满的S形/C形曲线) */}
-        <path d="M 25 15 C 40 10, 55 10, 65 20 C 75 30, 60 40, 50 30 C 45 25, 45 15, 55 10" />
-        
-        {/* 内侧的小卷曲 */}
-        <path d="M 35 30 C 45 40, 55 40, 60 30" />
-        <path d="M 15 30 C 25 40, 25 50, 15 55" />
-
-        {/* 叶片点缀 */}
-        <path d="M 35 15 C 45 20, 55 20, 60 10" />
-
-        {/* 原图标志性的圆点 (实心) */}
-        <circle cx="20" cy="40" r="2" fill="currentColor" stroke="none" />
-        <circle cx="50" cy="30" r="2" fill="currentColor" stroke="none" />
-        <circle cx="55" cy="35" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="65" cy="15" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="15" cy="55" r="1.5" fill="currentColor" stroke="none" />
-
-        {/* 散落的游离点 */}
-        <circle cx="45" cy="45" r="1.2" fill="currentColor" stroke="none" />
-        <circle cx="30" cy="55" r="1.2" fill="currentColor" stroke="none" />
-        <circle cx="75" cy="20" r="1.2" fill="currentColor" stroke="none" />
-        <circle cx="70" cy="10" r="1.2" fill="currentColor" stroke="none" />
-      </g>
-    </g>
-  </svg>
-);
-
 // 1:1 严格复刻参考图：顶部和底部的对称花草装饰
 const TopBottomOrnament = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 200 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
