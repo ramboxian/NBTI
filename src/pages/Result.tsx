@@ -3,19 +3,19 @@ import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
 
-// Simple SVG Radar Chart
 const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, themeColor: string }) => {
   // 按照题库实际的最小/最大值对分数进行归一化 (0到1)
-  const normN = Math.max(0, Math.min(1, (scores.N + 22) / 52));
-  const normB = Math.max(0, Math.min(1, (scores.B + 30) / 57));
-  const normT = Math.max(0, Math.min(1, (scores.T + 30) / 60));
+  const normN = Math.max(0, Math.min(1, ((scores.N || 0) + 21) / 43));
+  const normS = Math.max(0, Math.min(1, ((scores.S || 0) + 22) / 45));
+  const normB = Math.max(0, Math.min(1, ((scores.B || 0) + 20) / 42));
+  const normT = Math.max(0, Math.min(1, ((scores.T || 0) + 24) / 47));
 
   // 半径和中心点
   const r = 40;
   const cx = 50;
   const cy = 50;
 
-  // N (Top), B (Bottom Right), T (Bottom Left)
+  // N (Top 0), S (Right 90), B (Bottom 180), T (Left 270)
   const getPoint = (normValue: number, angleDeg: number) => {
     const rad = (angleDeg - 90) * (Math.PI / 180);
     return {
@@ -25,13 +25,14 @@ const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, th
   };
 
   const pN = getPoint(normN, 0);
-  const pB = getPoint(normB, 120);
-  const pT = getPoint(normT, 240);
+  const pS = getPoint(normS, 90);
+  const pB = getPoint(normB, 180);
+  const pT = getPoint(normT, 270);
 
   // Background grid points
-  const g1N = getPoint(1, 0), g1B = getPoint(1, 120), g1T = getPoint(1, 240);
-  const g2N = getPoint(0.66, 0), g2B = getPoint(0.66, 120), g2T = getPoint(0.66, 240);
-  const g3N = getPoint(0.33, 0), g3B = getPoint(0.33, 120), g3T = getPoint(0.33, 240);
+  const g1N = getPoint(1, 0), g1S = getPoint(1, 90), g1B = getPoint(1, 180), g1T = getPoint(1, 270);
+  const g2N = getPoint(0.66, 0), g2S = getPoint(0.66, 90), g2B = getPoint(0.66, 180), g2T = getPoint(0.66, 270);
+  const g3N = getPoint(0.33, 0), g3S = getPoint(0.33, 90), g3B = getPoint(0.33, 180), g3T = getPoint(0.33, 270);
 
   // 直接使用 themeColor 作为十六进制颜色
   const hexColor = themeColor || '#ffffff';
@@ -43,34 +44,35 @@ const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, th
         <span className="text-[10px] tracking-[0.2em] font-medium opacity-80">维度雷达</span>
       </h3>
       
-      {/* N, B, T Explanation */}
-      <div className="flex flex-col items-center gap-1.5 font-sans text-[11px] uppercase tracking-[0.2em] opacity-60 mb-10">
-        <span><strong className="opacity-100 font-medium">N</strong> : 牛马值 (卷/躺)</span>
-        <span><strong className="opacity-100 font-medium">B</strong> : 背锅值 (扛/闪)</span>
-        <span><strong className="opacity-100 font-medium">T</strong> : 套路值 (深/浅)</span>
+      {/* N, B, T, S Explanation */}
+      <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 font-sans text-[11px] uppercase tracking-[0.2em] opacity-60 mb-10">
+        <span><strong className="opacity-100 font-medium">N</strong> : 牛马 (卷/躺)</span>
+        <span><strong className="opacity-100 font-medium">B</strong> : 背锅 (扛/闪)</span>
+        <span><strong className="opacity-100 font-medium">T</strong> : 套路 (深/浅)</span>
+        <span><strong className="opacity-100 font-medium">S</strong> : 社交 (戏/NPC)</span>
       </div>
 
       <div className="w-72 h-72 relative">
         <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
           {/* Background Grids */}
-          <polygon points={`${g1N.x},${g1N.y} ${g1B.x},${g1B.y} ${g1T.x},${g1T.y}`} fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
-          <polygon points={`${g2N.x},${g2N.y} ${g2B.x},${g2B.y} ${g2T.x},${g2T.y}`} fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
-          <polygon points={`${g3N.x},${g3N.y} ${g3B.x},${g3B.y} ${g3T.x},${g3T.y}`} fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
+          <polygon points={`${g1N.x},${g1N.y} ${g1S.x},${g1S.y} ${g1B.x},${g1B.y} ${g1T.x},${g1T.y}`} fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
+          <polygon points={`${g2N.x},${g2N.y} ${g2S.x},${g2S.y} ${g2B.x},${g2B.y} ${g2T.x},${g2T.y}`} fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
+          <polygon points={`${g3N.x},${g3N.y} ${g3S.x},${g3S.y} ${g3B.x},${g3B.y} ${g3T.x},${g3T.y}`} fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
           
           {/* Axes */}
-          <line x1={cx} y1={cy} x2={g1N.x} y2={g1N.y} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
-          <line x1={cx} y1={cy} x2={g1B.x} y2={g1B.y} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
-          <line x1={cx} y1={cy} x2={g1T.x} y2={g1T.y} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
+          <line x1={g1T.x} y1={cy} x2={g1S.x} y2={cy} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
+          <line x1={cx} y1={g1N.y} x2={cx} y2={g1B.y} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" />
 
           {/* Labels */}
           <text x={g1N.x} y={g1N.y - 4} fontSize="5" fill="currentColor" textAnchor="middle" opacity="0.7">N</text>
-          <text x={g1B.x + 5} y={g1B.y + 2} fontSize="5" fill="currentColor" textAnchor="middle" opacity="0.7">B</text>
-          <text x={g1T.x - 5} y={g1T.y + 2} fontSize="5" fill="currentColor" textAnchor="middle" opacity="0.7">T</text>
+          <text x={g1S.x + 5} y={g1S.y + 1.5} fontSize="5" fill="currentColor" textAnchor="start" opacity="0.7">S</text>
+          <text x={g1B.x} y={g1B.y + 6} fontSize="5" fill="currentColor" textAnchor="middle" opacity="0.7">B</text>
+          <text x={g1T.x - 5} y={g1T.y + 1.5} fontSize="5" fill="currentColor" textAnchor="end" opacity="0.7">T</text>
 
           {/* Data Polygon */}
           <polygon 
             style={{ transformOrigin: '50% 50%' }}
-            points={`${pN.x},${pN.y} ${pB.x},${pB.y} ${pT.x},${pT.y}`} 
+            points={`${pN.x},${pN.y} ${pS.x},${pS.y} ${pB.x},${pB.y} ${pT.x},${pT.y}`} 
             fill={hexColor} 
             fillOpacity="0.3" 
             stroke={hexColor} 
@@ -79,6 +81,7 @@ const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, th
           
           {/* Data Points */}
           <circle cx={pN.x} cy={pN.y} r="1.5" fill={hexColor} />
+          <circle cx={pS.x} cy={pS.y} r="1.5" fill={hexColor} />
           <circle cx={pB.x} cy={pB.y} r="1.5" fill={hexColor} />
           <circle cx={pT.x} cy={pT.y} r="1.5" fill={hexColor} />
         </svg>
@@ -98,19 +101,19 @@ export default function Result() {
   if (!location.state || !location.state.scores) {
     // 为了方便预览彩蛋效果，如果没有传入分数，则给一个默认触发彩蛋的高分组合
     location.state = {
-      scores: { N: 8, B: -8, T: 7 }
+      scores: { N: 8, B: -8, T: 7, S: 8 }
     };
   }
 
   const scores = location.state.scores as Record<string, number>;
   
-  // 动态平衡补偿：如果某个维度的得分为0，我们根据另外两个维度的总和来做反向平衡
-  // 这能够极大地拉平由于题库中某些维度选项稍多/少导致的概率偏差，让8个人格的出现几率更趋近于均等（约 12.5%）
-  const finalN = scores.N === 0 ? (scores.B + scores.T >= 0 ? -1 : 1) : scores.N;
-  const finalB = scores.B === 0 ? (scores.N + scores.T >= 0 ? -1 : 1) : scores.B;
-  const finalT = scores.T === 0 ? (scores.N + scores.B >= 0 ? -1 : 1) : scores.T;
+  // 动态平衡补偿：如果某个维度的得分为0，我们根据其他维度的总和来做反向平衡
+  const finalN = scores.N === 0 ? ((scores.B || 0) + (scores.T || 0) + (scores.S || 0) >= 0 ? -1 : 1) : scores.N;
+  const finalB = scores.B === 0 ? ((scores.N || 0) + (scores.T || 0) + (scores.S || 0) >= 0 ? -1 : 1) : scores.B;
+  const finalT = scores.T === 0 ? ((scores.N || 0) + (scores.B || 0) + (scores.S || 0) >= 0 ? -1 : 1) : scores.T;
+  const finalS = scores.S === 0 ? ((scores.N || 0) + (scores.B || 0) + (scores.T || 0) >= 0 ? -1 : 1) : scores.S;
 
-  const resultId = `${finalN > 0 ? 'N+' : 'N-'}${finalB > 0 ? 'B+' : 'B-'}${finalT > 0 ? 'T+' : 'T-'}`;
+  const resultId = `${finalN > 0 ? 'N+' : 'N-'}${finalB > 0 ? 'B+' : 'B-'}${finalT > 0 ? 'T+' : 'T-'}${finalS > 0 ? 'S+' : 'S-'}`;
   const easterEggs: { title: string; desc: string }[] = [];
   if (scores.N >= 5) easterEggs.push({ title: '🔥 牛马之魂', desc: '你的卷度已超越人类极限。建议检查一下自己是不是被PUA了，或者你其实享受这一切？' });
   if (scores.N <= -5) easterEggs.push({ title: '🛋️ 究极摸鱼王', desc: '你的摸鱼已臻化境。公司网络一半的流量可能都是你的。不过认真的说——你快乐吗？' });
@@ -118,11 +121,13 @@ export default function Result() {
   if (scores.B <= -5) easterEggs.push({ title: '🏃 闪电甩锅侠', desc: '你的不粘锅属性已满级。任何责任到你这里都会自动反弹。建议偶尔接一个锅——哪怕是空锅' });
   if (scores.T >= 5) easterEggs.push({ title: '🧠 职场诸葛亮', desc: '你已经活成了一本职场厚黑学。提醒：套路可以有，但真心不能丢。人生不止有KPI' });
   if (scores.T <= -5) easterEggs.push({ title: '💬 人间直球机', desc: '你的直球程度已经突破大气层。虽然世界需要真诚的人，但偶尔学点"说话的艺术"能救命' });
+  if (scores.S >= 5) easterEggs.push({ title: '🎭 职场奥斯卡', desc: '你的社交戏精属性已经溢出屏幕了。你一个人就能演完一部甄嬛传。' });
+  if (scores.S <= -5) easterEggs.push({ title: '🧊 终极制冷机', desc: '你的高冷已经让周围结冰了。虽然沉默是金，但偶尔当个正常NPC也能省掉很多麻烦。' });
 
   // 如果需要修改结果对象的逻辑可以在这里进行，比如附带彩蛋内容
   let baseResult = resultsData[resultId];
   if (!baseResult) {
-    baseResult = resultsData['N+B+T+'];
+    baseResult = resultsData['N+B+T+S+'];
   }
 
   const result = {
@@ -275,7 +280,7 @@ export default function Result() {
 
           <div className="px-6 py-6 flex justify-between items-center opacity-90">
              <div className="font-sans text-[9px] uppercase tracking-[0.2em] leading-relaxed">
-               N{scores.N > 0 ? '+' : ''}{scores.N} / B{scores.B > 0 ? '+' : ''}{scores.B} / T{scores.T > 0 ? '+' : ''}{scores.T}<br/>
+               N{scores.N > 0 ? '+' : ''}{scores.N || 0} / B{scores.B > 0 ? '+' : ''}{scores.B || 0} / T{scores.T > 0 ? '+' : ''}{scores.T || 0} / S{scores.S > 0 ? '+' : ''}{scores.S || 0}<br/>
                NBTI ASSESSMENT<br/>
                VALID FOR ONE LIFE
              </div>
@@ -411,7 +416,7 @@ export default function Result() {
                 { label: '卷王指数', value: result.stats?.workaholic || 0, opacity: 1 },
                 { label: '黑锅抗性', value: result.stats?.resilience || 0, opacity: 0.8 },
                 { label: '套路深浅', value: result.stats?.strategy || 0, opacity: 0.6 },
-                { label: '情绪稳定', value: result.stats?.emotional || 0, opacity: 0.5 },
+                { label: '社交指数', value: result.stats?.social || 0, opacity: 0.5 },
                 { label: '生存寿命', value: result.stats?.survival || 0, opacity: 0.4 },
               ].map(stat => (
                 <div key={stat.label} className="flex items-center gap-3">
@@ -459,19 +464,35 @@ export default function Result() {
             </h2>
             <div className="mt-4 bg-white/5 rounded-xl p-5 border border-white/5 flex items-center justify-between">
               <div className="flex flex-col gap-6 w-1/2">
-                {[
-                  { label: '🧠 精神内耗', value: Math.max(10, 100 - (result.stats?.emotional || 50)), opacity: 0.6 },
-                  { label: '💼 实际产出', value: result.stats?.workaholic || 50, opacity: 1 },
-                  { label: '🎣 摸鱼时间', value: Math.max(5, 100 - (result.stats?.workaholic || 50)), opacity: 0.3 }
-                ].map(item => (
-                  <div key={item.label} className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColor, opacity: item.opacity }}></div>
-                      <span className="text-[12px] opacity-80">{item.label}</span>
-                    </div>
-                    <span className="text-[16px] font-mono ml-4 text-[#f4f0ea]/90">{item.value}%</span>
-                  </div>
-                ))}
+                {(() => {
+                  const rawProd = result.stats?.workaholic || 50;
+                  const rawFric = 100 - (result.stats?.social || 50);
+                  const rawSlack = 100 - rawProd;
+                  const total = rawProd + rawFric + rawSlack;
+                  const prodPct = Math.round((rawProd / total) * 100);
+                  const fricPct = Math.round((rawFric / total) * 100);
+                  const slackPct = 100 - prodPct - fricPct;
+                  
+                  const items = [
+                    { label: '🧠 精神内耗', value: fricPct, opacity: 0.6 },
+                    { label: '💼 实际产出', value: prodPct, opacity: 1 },
+                    { label: '🎣 摸鱼时间', value: slackPct, opacity: 0.3 }
+                  ];
+                  
+                  return (
+                    <>
+                      {items.map(item => (
+                        <div key={item.label} className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColor, opacity: item.opacity }}></div>
+                            <span className="text-[12px] opacity-80">{item.label}</span>
+                          </div>
+                          <span className="text-[16px] font-mono ml-4 text-[#f4f0ea]/90">{item.value}%</span>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
               
               {/* 简易的甜甜圈图 (Donut Chart) */}
@@ -484,33 +505,47 @@ export default function Result() {
                     stroke="rgba(255,255,255,0.05)"
                     strokeWidth="3"
                   />
-                  {/* Data rings */}
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke={chartColor}
-                    strokeOpacity="0.6"
-                    strokeWidth="3"
-                    strokeDasharray={`${Math.max(10, 100 - (result.stats?.emotional || 50))}, 100`}
-                  />
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke={chartColor}
-                    strokeOpacity="1"
-                    strokeWidth="3"
-                    strokeDasharray={`${result.stats?.workaholic || 50}, 100`}
-                    strokeDashoffset={`-${Math.max(10, 100 - (result.stats?.emotional || 50))}`}
-                  />
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke={chartColor}
-                    strokeOpacity="0.3"
-                    strokeWidth="3"
-                    strokeDasharray={`${Math.max(5, 100 - (result.stats?.workaholic || 50))}, 100`}
-                    strokeDashoffset={`-${Math.max(10, 100 - (result.stats?.emotional || 50)) + (result.stats?.workaholic || 50)}`}
-                  />
+                  {(() => {
+                    const rawProd = result.stats?.workaholic || 50;
+                    const rawFric = 100 - (result.stats?.social || 50);
+                    const rawSlack = 100 - rawProd;
+                    const total = rawProd + rawFric + rawSlack;
+                    const prodPct = Math.round((rawProd / total) * 100);
+                    const fricPct = Math.round((rawFric / total) * 100);
+                    const slackPct = 100 - prodPct - fricPct;
+                    
+                    return (
+                      <>
+                        {/* Data rings */}
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke={chartColor}
+                          strokeOpacity="0.6"
+                          strokeWidth="3"
+                          strokeDasharray={`${fricPct}, 100`}
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke={chartColor}
+                          strokeOpacity="1"
+                          strokeWidth="3"
+                          strokeDasharray={`${prodPct}, 100`}
+                          strokeDashoffset={`-${fricPct}`}
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke={chartColor}
+                          strokeOpacity="0.3"
+                          strokeWidth="3"
+                          strokeDasharray={`${slackPct}, 100`}
+                          strokeDashoffset={`-${fricPct + prodPct}`}
+                        />
+                      </>
+                    );
+                  })()}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   <span className="text-[10px] opacity-50 uppercase tracking-widest">Energy</span>
@@ -525,31 +560,26 @@ export default function Result() {
               Colleague's View
               <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">同事眼中的你</span>
             </h2>
-            <ul className="space-y-4">
-              {result.colleagueView.map((item, idx) => (
-                <li key={idx} className="flex gap-4 items-start">
-                  <span className="font-serif text-[16px] leading-[1.8] text-[#f4f0ea]/80 italic">
-                    {item}
-                  </span>
-                </li>
+            <div className="space-y-4">
+              {(result.colleagueView || []).map((view, idx) => (
+                <div key={idx} className="font-serif text-[15px] leading-[1.8] text-[#f4f0ea]/80 bg-white/5 p-4 rounded-xl border border-white/5 relative">
+                  <span className="absolute -left-2 -top-2 text-2xl opacity-20">"</span>
+                  {view}
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
           <div className="px-2">
             <h2 className="font-serif text-[32px] mb-6 border-b-[0.5px] border-[#f4f0ea]/20 pb-4 flex items-baseline gap-4">
               Strategy & Risks
-              <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">生存策略与雷区</span>
+              <span className="font-sans text-[12px] tracking-[0.2em] opacity-60 font-light mb-1 uppercase">生存指南</span>
             </h2>
-            <ul className="space-y-6">
-              {result.strategy.map((item, idx) => (
-                <li key={idx} className="flex gap-5 items-start">
-                  <span className="font-italic text-[20px] text-[#f4f0ea]/40 shrink-0 mt-[-2px]">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <span className="font-serif text-[16px] leading-[1.8] text-[#f4f0ea]/80">
-                    {item}
-                  </span>
+            <ul className="space-y-3 font-serif text-[15px] leading-[1.8] text-[#f4f0ea]/80">
+              {(result.strategy || []).map((strat, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <span className="text-[#d8c39e] mt-1">•</span>
+                  <span className="flex-1">{strat}</span>
                 </li>
               ))}
             </ul>

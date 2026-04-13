@@ -44,7 +44,7 @@ export default function AllResults() {
         </div>
         
         <h1 className="font-serif text-[32px] tracking-widest uppercase mb-2 text-[#d8c39e]">
-          八大牛马图鉴
+          全人格图鉴
         </h1>
         <div className="w-12 h-[1px] bg-[#d8c39e]/40 mb-4"></div>
         <p className="font-serif text-[13px] leading-[1.8] opacity-70">

@@ -89,7 +89,7 @@ const VintageFrameOverlay = () => (
 export default function Quiz() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [scores, setScores] = useState<Record<string, number>>({ N: 0, B: 0, T: 0 });
+  const [scores, setScores] = useState<Record<string, number>>({ N: 0, B: 0, T: 0, S: 0 });
   const [history, setHistory] = useState<Record<string, number>[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({}); // Store selected option id by question index
   const [direction, setDirection] = useState(1);

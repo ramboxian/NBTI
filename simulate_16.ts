@@ -1,0 +1,35 @@
+import { questions } from './src/data/questions.ts';
+
+function simulate() {
+  const TRIALS = 100000;
+  const counts: Record<string, number> = {};
+
+  for (let i = 0; i < TRIALS; i++) {
+    let n = 0, b = 0, t = 0, s = 0;
+
+    for (const q of questions) {
+      const randIdx = Math.floor(Math.random() * q.options.length);
+      const opt = q.options[randIdx];
+      if (opt.scores.N) n += opt.scores.N;
+      if (opt.scores.B) b += opt.scores.B;
+      if (opt.scores.T) t += opt.scores.T;
+      if (opt.scores.S) s += opt.scores.S;
+    }
+
+    const finalN = n === 0 ? ((b || 0) + (t || 0) + (s || 0) >= 0 ? -1 : 1) : n;
+    const finalB = b === 0 ? ((n || 0) + (t || 0) + (s || 0) >= 0 ? -1 : 1) : b;
+    const finalT = t === 0 ? ((n || 0) + (b || 0) + (s || 0) >= 0 ? -1 : 1) : t;
+    const finalS = s === 0 ? ((n || 0) + (b || 0) + (t || 0) >= 0 ? -1 : 1) : s;
+
+    const resId = `${finalN > 0 ? 'N+' : 'N-'}${finalB > 0 ? 'B+' : 'B-'}${finalT > 0 ? 'T+' : 'T-'}${finalS > 0 ? 'S+' : 'S-'}`;
+    counts[resId] = (counts[resId] || 0) + 1;
+  }
+
+  console.log("Probabilities with balance compensation:");
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  for (const [id, count] of entries) {
+    console.log(`${id}: ${((count / TRIALS) * 100).toFixed(2)}%`);
+  }
+}
+
+simulate();
