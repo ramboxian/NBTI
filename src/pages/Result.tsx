@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
+import html2canvas from 'html2canvas';
 
 const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, themeColor: string }) => {
   // 按照题库实际的最小/最大值对分数进行归一化 (0到1)
@@ -93,6 +94,42 @@ const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, th
 export default function Result() {
   const location = useLocation();
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!containerRef.current) return;
+    try {
+      setIsExporting(true);
+      // Give a tiny delay to let UI state update (like hiding the button)
+      await new Promise(res => setTimeout(res, 100));
+
+      const canvas = await html2canvas(containerRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#1a1817',
+        logging: false,
+        onclone: (clonedDoc) => {
+          // Hide elements marked with data-html2canvas-ignore just in case,
+          // though html2canvas should handle it natively.
+          const elementsToHide = clonedDoc.querySelectorAll('[data-html2canvas-ignore]');
+          elementsToHide.forEach(el => (el as HTMLElement).style.display = 'none');
+        }
+      });
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `NBTI-Result-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to export image', err);
+      alert('导出图片失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // if skipLoading is passed, start directly at 'done'
   const [phase, setPhase] = useState<'loading' | 'done'>(
     location.state?.skipLoading ? 'done' : 'loading'
@@ -224,9 +261,26 @@ export default function Result() {
     
     return (
     <div 
+      ref={containerRef}
       style={{ backgroundColor: '#1a1817' }} 
       className="min-h-[100dvh] w-full flex flex-col items-center py-12 px-6 relative"
     >
+      {/* Top right export button */}
+      {!isExporting && (
+        <button
+          onClick={handleExport}
+          data-html2canvas-ignore
+          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all shadow-lg backdrop-blur-md"
+          title="Save as Image"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+      )}
+
       {/* Tinted Overlay layer */}
       <div 
         className="absolute inset-0 pointer-events-none"
