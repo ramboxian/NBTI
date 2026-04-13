@@ -106,17 +106,17 @@ const SideOrnament = ({ className }: { className?: string }) => (
 
 const VintageFrameOverlay = () => (
   <div className="absolute inset-4 pointer-events-none z-0 text-[#9C9C9C] opacity-80">
-    {/* 直线使用 1.5px 的统一粗细，颜色较浅的灰，不再是极细 */}
-    <div className="absolute top-0 left-[45px] right-[45px] h-[1.5px] bg-current"></div>
-    <div className="absolute bottom-0 left-[45px] right-[45px] h-[1.5px] bg-current"></div>
-    <div className="absolute left-0 top-[45px] bottom-[45px] w-[1.5px] bg-current"></div>
-    <div className="absolute right-0 top-[45px] bottom-[45px] w-[1.5px] bg-current"></div>
+    {/* 直线使用 1.5px 的统一粗细，颜色较浅的灰。为了不碰到 90px 的角花且留出 30px 间距，起止点设为 120px */}
+    <div className="absolute top-0 left-[120px] right-[120px] h-[1.5px] bg-current"></div>
+    <div className="absolute bottom-0 left-[120px] right-[120px] h-[1.5px] bg-current"></div>
+    <div className="absolute left-0 top-[120px] bottom-[120px] w-[1.5px] bg-current"></div>
+    <div className="absolute right-0 top-[120px] bottom-[120px] w-[1.5px] bg-current"></div>
 
-    {/* 4 个角花：尺寸小巧(w-12)但图案饱满，不夸张 */}
-    <CornerOrnament className="absolute top-[-1px] left-[-1px] w-12 h-12 text-current" />
-    <CornerOrnament className="absolute top-[-1px] right-[-1px] w-12 h-12 text-current transform scale-x-[-1]" />
-    <CornerOrnament className="absolute bottom-[-1px] left-[-1px] w-12 h-12 text-current transform scale-y-[-1]" />
-    <CornerOrnament className="absolute bottom-[-1px] right-[-1px] w-12 h-12 text-current transform scale-x-[-1] scale-y-[-1]" />
+    {/* 4 个角花：向外扩散 8px (从 -1px 改为 -9px)，使其更靠近屏幕边缘，但不影响直线的边距 */}
+    <img src="/花边.svg" className="absolute top-[-9px] left-[-9px] w-[90px] h-[90px]" alt="" />
+    <img src="/花边.svg" className="absolute top-[-9px] right-[-9px] w-[90px] h-[90px] transform scale-x-[-1]" alt="" />
+    <img src="/花边.svg" className="absolute bottom-[-9px] left-[-9px] w-[90px] h-[90px] transform scale-y-[-1]" alt="" />
+    <img src="/花边.svg" className="absolute bottom-[-9px] right-[-9px] w-[90px] h-[90px] transform scale-x-[-1] scale-y-[-1]" alt="" />
 
     {/* 上下中心装饰：细长优美 */}
     <TopBottomOrnament className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-32 h-3.5 text-current" />
