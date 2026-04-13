@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
-import { toPng } from 'html-to-image';
+import { toJpeg } from 'html-to-image';
 
 const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, themeColor: string }) => {
   // 按照题库实际的最小/最大值对分数进行归一化 (0到1)
@@ -104,8 +104,8 @@ export default function Result() {
       // Give a tiny delay to let UI state update (like hiding the button and showing loading)
       await new Promise(res => setTimeout(res, 100));
 
-      const dataUrl = await toPng(containerRef.current, {
-        quality: 1,
+      const dataUrl = await toJpeg(containerRef.current, {
+        quality: 0.9,
         pixelRatio: 2,
         backgroundColor: '#1a1817',
         filter: (node) => {
@@ -118,7 +118,7 @@ export default function Result() {
       });
 
       const link = document.createElement('a');
-      link.download = `NBTI-Result-${Date.now()}.png`;
+      link.download = `NBTI-Result-${Date.now()}.jpg`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -683,9 +683,31 @@ export default function Result() {
 
       {/* Export Loading Overlay */}
       {isExporting && (
-        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="w-12 h-12 border-4 border-white/20 border-t-white/80 rounded-full animate-spin mb-4"></div>
-          <p className="text-white/80 font-serif tracking-widest text-sm">GENERATING...</p>
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-6">
+          <div className="bg-[#1a1817]/95 border border-white/10 rounded-[24px] flex flex-col items-center shadow-2xl overflow-hidden w-full max-w-[320px]">
+            {/* Image section */}
+            <div className="w-full h-[220px] bg-[#2a2827] relative overflow-hidden flex items-center justify-center">
+              <img 
+                src="/images/angel-download.png" 
+                alt="Downloading" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if image isn't available yet
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="text-4xl">👼</div>';
+                }}
+              />
+            </div>
+            
+            {/* Content section */}
+            <div className="px-6 pt-8 pb-8 flex flex-col items-center w-full">
+              <div className="w-10 h-10 border-[3px] border-[#d8c39e]/20 border-t-[#d8c39e] rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(216,195,158,0.2)]"></div>
+              <h3 className="text-[#f4f0ea] font-serif text-[20px] tracking-wide mb-3 font-medium">诊断书下载中...</h3>
+              <p className="text-[#f4f0ea]/60 font-sans text-[13px] tracking-wider text-center leading-relaxed">
+                小天使已经在云端取图了<br/>请耐心等候，马上就好
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
