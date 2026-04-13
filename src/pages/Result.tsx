@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
@@ -104,22 +104,13 @@ export default function Result() {
 
   const scores = location.state.scores as Record<string, number>;
   
-  // 恢复策划文档的原始计分判定（0 为界限），并按 v4 规则处理 score=0
-  const determineType = (score: number, dimension: string) => {
-    if (score > 0) return `${dimension}+`;
-    if (score < 0) return `${dimension}-`;
-    // score === 0 时随机归属
-    return Math.random() < 0.5 ? `${dimension}+` : `${dimension}-`;
-  };
+  // 动态平衡补偿：如果某个维度的得分为0，我们根据另外两个维度的总和来做反向平衡
+  // 这能够极大地拉平由于题库中某些维度选项稍多/少导致的概率偏差，让8个人格的出现几率更趋近于均等（约 12.5%）
+  const finalN = scores.N === 0 ? (scores.B + scores.T >= 0 ? -1 : 1) : scores.N;
+  const finalB = scores.B === 0 ? (scores.N + scores.T >= 0 ? -1 : 1) : scores.B;
+  const finalT = scores.T === 0 ? (scores.N + scores.B >= 0 ? -1 : 1) : scores.T;
 
-  const resultId = React.useMemo(() => {
-    const typeN = determineType(scores.N, 'N');
-    const typeB = determineType(scores.B, 'B');
-    const typeT = determineType(scores.T, 'T');
-    return `${typeN}${typeB}${typeT}`;
-  }, [scores.N, scores.B, scores.T]);
-  
-  // 提取单维度彩蛋 (正常逻辑，通过上面的默认高分自动触发)
+  const resultId = `${finalN > 0 ? 'N+' : 'N-'}${finalB > 0 ? 'B+' : 'B-'}${finalT > 0 ? 'T+' : 'T-'}`;
   const easterEggs: { title: string; desc: string }[] = [];
   if (scores.N >= 5) easterEggs.push({ title: '🔥 牛马之魂', desc: '你的卷度已超越人类极限。建议检查一下自己是不是被PUA了，或者你其实享受这一切？' });
   if (scores.N <= -5) easterEggs.push({ title: '🛋️ 究极摸鱼王', desc: '你的摸鱼已臻化境。公司网络一半的流量可能都是你的。不过认真的说——你快乐吗？' });
