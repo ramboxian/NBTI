@@ -667,7 +667,7 @@ export default function Result() {
       {!isExporting && (
         <button
           onClick={handleExport}
-          className="fixed top-4 right-4 z-50 p-2.5 rounded-full bg-black/30 border border-white/10 text-white/80 hover:text-white hover:bg-black/50 transition-all shadow-lg backdrop-blur-md"
+          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-black/30 border border-white/10 text-white/80 hover:text-white hover:bg-black/50 transition-all shadow-lg backdrop-blur-md"
           title="Save as Image"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
