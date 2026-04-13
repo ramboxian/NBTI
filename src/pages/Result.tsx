@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, themeColor: string }) => {
   // 按照题库实际的最小/最大值对分数进行归一化 (0到1)
@@ -101,23 +101,22 @@ export default function Result() {
     if (!containerRef.current) return;
     try {
       setIsExporting(true);
-      // Give a tiny delay to let UI state update (like hiding the button)
+      // Give a tiny delay to let UI state update (like hiding the button and showing loading)
       await new Promise(res => setTimeout(res, 100));
 
-      const canvas = await html2canvas(containerRef.current, {
-        scale: 3,
-        useCORS: true,
+      const dataUrl = await toPng(containerRef.current, {
+        quality: 1,
+        pixelRatio: 2,
         backgroundColor: '#1a1817',
-        logging: false,
-        onclone: (clonedDoc) => {
-          // Hide elements marked with data-html2canvas-ignore just in case,
-          // though html2canvas should handle it natively.
-          const elementsToHide = clonedDoc.querySelectorAll('[data-html2canvas-ignore]');
-          elementsToHide.forEach(el => (el as HTMLElement).style.display = 'none');
+        filter: (node) => {
+          // Exclude elements with data-html2canvas-ignore
+          if (node instanceof HTMLElement && node.dataset && 'html2canvasIgnore' in node.dataset) {
+            return false;
+          }
+          return true;
         }
       });
 
-      const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `NBTI-Result-${Date.now()}.png`;
       link.href = dataUrl;
@@ -681,6 +680,14 @@ export default function Result() {
       <div className={`absolute inset-0 z-10 overflow-y-auto no-scrollbar ${phase === 'loading' ? 'invisible' : 'visible'}`}>
         {renderResultContent()}
       </div>
+
+      {/* Export Loading Overlay */}
+      {isExporting && (
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="w-12 h-12 border-4 border-white/20 border-t-white/80 rounded-full animate-spin mb-4"></div>
+          <p className="text-white/80 font-serif tracking-widest text-sm">GENERATING...</p>
+        </div>
+      )}
     </div>
   );
 }
