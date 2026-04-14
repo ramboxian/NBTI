@@ -49,27 +49,11 @@ export const getLighterColor = (hex: string, lightenFactor = 1.5) => {
   return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
 };
 
-const FONT_SERIF = '${FONT_SERIF}';
-const FONT_SANS = '"Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, ${FONT_SANS}';
-
 export const generatePosterCanvas = async (
   result: any,
   scores: Record<string, number>,
   EASTER_EGG_BANNER_URL: string
 ): Promise<string> => {
-  // 在画图前先强制加载所需的 Web Font (这里等待 document.fonts)
-  // 如果不支持该 API（比如部分老手机），就直接跳过
-  if ('fonts' in document) {
-    try {
-      // 通过加载一段使用该字体的文本，促使浏览器下载并解析
-      await document.fonts.load(`16px "Playfair Display"`);
-      await document.fonts.load(`16px "Noto Serif SC"`);
-      await document.fonts.load(`16px "Songti SC"`);
-    } catch (e) {
-      console.warn('Font loading API error:', e);
-    }
-  }
-
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2d context');
@@ -79,6 +63,9 @@ export const generatePosterCanvas = async (
   canvas.height = 15000; 
   
   const scale = 2;
+  // 字体配置变量，增加跨平台后备支持
+  const serifFonts = `"Songti SC", "STSong", "SimSun", "Noto Serif SC", serif`;
+  const sansFonts = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
   
   // Background
   ctx.fillStyle = '#1a1817';
@@ -96,7 +83,7 @@ export const generatePosterCanvas = async (
   // Header: Title
   // ==========================================
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.font = `600 ${28 * scale}px ${FONT_SERIF}`;
+  ctx.font = `600 ${28 * scale}px ${serifFonts}`;
   ctx.textAlign = 'center';
   ctx.fillText('NBTI', W / 2, y);
 
@@ -121,9 +108,9 @@ export const generatePosterCanvas = async (
   const cutRadius = 10 * scale;
   const imgHeight = contentW * (3 / 4);
   
-  ctx.font = `600 ${42 * scale}px ${FONT_SERIF}`;
+  ctx.font = `600 ${42 * scale}px "Songti SC", serif`;
   const nameH = 42 * scale;
-  ctx.font = `italic ${16 * scale}px ${FONT_SANS}`;
+  ctx.font = `italic ${16 * scale}px sans-serif`;
   
   // 简介文字左右至少距离卡片 24px，所以 maxWidth = contentW - 48*2 = contentW - 96
   const sloganMaxWidth = contentW - 48 * scale;
@@ -167,11 +154,11 @@ export const generatePosterCanvas = async (
 
   ctx.fillStyle = result.textColor;
   ctx.textAlign = 'center';
-  ctx.font = `600 ${42 * scale}px ${FONT_SERIF}`;
+  ctx.font = `600 ${42 * scale}px ${serifFonts}`;
   ctx.fillText(result.name, W / 2, ty);
   ty += 42 * scale + 12 * scale; // ty 是为了下一个元素的起点
 
-  ctx.font = `italic 300 ${16 * scale}px ${FONT_SANS}`; // 将粗细调细，比如加上 300
+  ctx.font = `italic 300 ${16 * scale}px ${sansFonts}`; // 将粗细调细，比如加上 300
   ctx.globalAlpha = 0.8;
   
   // slogan 居中
@@ -180,13 +167,12 @@ export const generatePosterCanvas = async (
   
   ty += 32 * scale;
 
-  ctx.font = `400 ${10 * scale}px ${FONT_SANS}`;
+  ctx.font = `400 ${10 * scale}px ${sansFonts}`;
   ctx.globalAlpha = 0.6;
   ctx.textAlign = 'left';
   ctx.fillText('FOR: RAMBOX', paddingX + 24 * scale, ty);
   ctx.textAlign = 'right';
-  const d = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
-  ctx.fillText(`DATE: ${d}`, paddingX + contentW - 24 * scale, ty);
+  ctx.fillText(`DATE: ${new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')}`, W - paddingX - 24 * scale, ty);
   ctx.globalAlpha = 1.0;
   ctx.textAlign = 'left';
 
@@ -197,7 +183,7 @@ export const generatePosterCanvas = async (
   ctx.globalAlpha = 1.0;
 
   ty = y + cutY + 24 * scale;
-  ctx.font = `400 ${9 * scale}px ${FONT_SANS}`;
+  ctx.font = `300 ${9 * scale}px ${sansFonts}`;
   ctx.globalAlpha = 0.9;
   const nStr = `N${scores.N > 0 ? '+' : ''}${scores.N || 0}`;
   const bStr = `B${scores.B > 0 ? '+' : ''}${scores.B || 0}`;
@@ -220,7 +206,7 @@ export const generatePosterCanvas = async (
     curBx += (w * scale * 0.8) + (i % 2 === 0 ? 2 * scale : 1 * scale);
   });
   
-  ctx.font = `bold ${7.5 * scale}px ${FONT_SANS}`;
+  ctx.font = `600 ${7.5 * scale}px ${sansFonts}`;
   ctx.globalAlpha = 0.7;
   ctx.textAlign = 'right';
   ctx.fillText('SCAN TO TEST', paddingX + contentW - 24 * scale, barcodeY + barcodeH + 12 * scale);
@@ -234,11 +220,11 @@ export const generatePosterCanvas = async (
   // ==========================================
   const drawSectionTitle = (titleEn: string, titleCn: string, cy: number) => {
     ctx.fillStyle = '#f4f0ea';
-    ctx.font = `300 ${32 * scale}px ${FONT_SERIF}`; // 从400改300
+    ctx.font = `300 ${32 * scale}px ${serifFonts}`; // 从400改300
     ctx.fillText(titleEn, paddingX, cy);
     
     const enW = ctx.measureText(titleEn).width;
-    ctx.font = `300 ${12 * scale}px ${FONT_SANS}`;
+    ctx.font = `300 ${12 * scale}px ${sansFonts}`;
     ctx.globalAlpha = 0.6;
     ctx.fillText(titleCn, paddingX + enW + 16 * scale, cy - 4 * scale);
     ctx.globalAlpha = 1.0;
@@ -257,19 +243,19 @@ export const generatePosterCanvas = async (
   const drawParagraph = (titleEn: string, titleCn: string, text: string, cy: number) => {
     ctx.fillStyle = '#f4f0ea';
     ctx.globalAlpha = 0.5;
-    ctx.font = `300 ${11 * scale}px ${FONT_SANS}`; // 减轻粗细
+    ctx.font = `300 ${11 * scale}px ${sansFonts}`; // 减轻粗细
     ctx.fillText(titleEn, paddingX, cy);
     
     const enW = ctx.measureText(titleEn).width;
     ctx.globalAlpha = 0.8;
-    ctx.font = `300 ${9 * scale}px ${FONT_SANS}`; // 减轻粗细
+    ctx.font = `300 ${9 * scale}px ${sansFonts}`; // 减轻粗细
     ctx.fillText(titleCn, paddingX + enW + 8 * scale, cy - 1 * scale);
     
     cy += 32 * scale;
     ctx.globalAlpha = 0.8;
-    ctx.font = `300 ${16 * scale}px ${FONT_SERIF}`; // 恢复字重为300，字号恢复为16px
-    // 2.0倍行高对应16px是 32 * scale
-    cy = fillTextWrap(ctx, text, paddingX, cy, contentW, 32 * scale);
+    ctx.font = `300 ${15 * scale}px ${serifFonts}`; // 正文字重回调到 300
+    // 2.0倍行高对应15px是 30 * scale
+    cy = fillTextWrap(ctx, text, paddingX, cy, contentW, 30 * scale);
     ctx.globalAlpha = 1.0;
 
     return cy + 32 * scale;
@@ -291,7 +277,7 @@ export const generatePosterCanvas = async (
     let py = 64 * scale; 
     py += 32 * scale; 
     
-    ctx.font = `300 ${14 * scale}px ${FONT_SERIF}`; // 减轻粗细
+    ctx.font = `300 ${14 * scale}px ${serifFonts}`; // 减轻粗细
     const congratsText = "恭喜你！在原有的人格诊断中，\n我们为你检测出了隐藏的专属彩蛋。\n这简直是万里挑一的独特存在。";
     py += measureTextHeight(ctx, congratsText, textMaxWidth, 14 * scale * 1.8);
     py += 24 * scale; 
@@ -301,7 +287,7 @@ export const generatePosterCanvas = async (
     result.easterEggs.forEach((egg: any, idx: number) => {
       py += 18 * scale; 
       py += 8 * scale;  
-      ctx.font = `300 ${14 * scale}px ${FONT_SERIF}`; // 减轻粗细
+      ctx.font = `300 ${14 * scale}px ${serifFonts}`; // 减轻粗细
       py += measureTextHeight(ctx, egg.desc, textMaxWidth, 14 * scale * 1.8);
       if (idx < result.easterEggs.length - 1) {
         py += 20 * scale; 
@@ -359,7 +345,7 @@ export const generatePosterCanvas = async (
     let innerY = currentY + 64 * scale + 32 * scale; 
     ctx.fillStyle = '#e6dfd1';
     ctx.globalAlpha = 0.9;
-    ctx.font = `300 ${14 * scale}px ${FONT_SERIF}`; // 减轻粗细
+    ctx.font = `300 ${14 * scale}px ${serifFonts}`; // 减轻粗细
     ctx.textAlign = 'center';
     
     innerY = fillTextWrap(ctx, congratsText, plaqueX + innerPaddingX, innerY, textMaxWidth, 14 * scale * 1.8, 'center');
@@ -377,7 +363,7 @@ export const generatePosterCanvas = async (
 
     result.easterEggs.forEach((egg: any, idx: number) => {
       ctx.fillStyle = '#d8c39e';
-      ctx.font = `500 ${18 * scale}px ${FONT_SERIF}`; // 从 bold(700) 减轻为 500
+      ctx.font = `500 ${18 * scale}px ${serifFonts}`; // 从 bold(700) 减轻为 500
       ctx.textAlign = 'center'; // 确保标题居中
       ctx.fillText(egg.title, W/2, innerY);
       innerY += 18 * scale;
@@ -385,7 +371,7 @@ export const generatePosterCanvas = async (
 
       ctx.fillStyle = '#f4f0ea';
       ctx.globalAlpha = 0.8;
-      ctx.font = `300 ${14 * scale}px ${FONT_SERIF}`; // 减轻粗细
+      ctx.font = `300 ${14 * scale}px ${serifFonts}`; // 减轻粗细
       innerY = fillTextWrap(ctx, egg.desc, plaqueX + innerPaddingX, innerY, textMaxWidth, 14 * scale * 1.8, 'center');
       ctx.globalAlpha = 1.0;
 
@@ -411,7 +397,7 @@ export const generatePosterCanvas = async (
   y = drawParagraph('Fatal Weakness', '致命弱点', result.weakness, y);
 
   // Traits
-  ctx.font = `300 ${9 * scale}px ${FONT_SANS}`; // 减轻粗细
+  ctx.font = `300 ${9 * scale}px sans-serif`; // 减轻粗细
   ctx.textBaseline = 'middle';
   let tagX = paddingX;
   let tagY = y - 8 * scale;
@@ -459,7 +445,7 @@ export const generatePosterCanvas = async (
 
   stats.forEach(stat => {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.font = `300 ${12 * scale}px ${FONT_SANS}`; // 减轻粗细
+    ctx.font = `300 ${12 * scale}px sans-serif`; // 减轻粗细
     ctx.fillText(stat.label, paddingX + 20 * scale, sy + 10 * scale);
     
     const barX = paddingX + 20 * scale + 64 * scale + 12 * scale;
@@ -493,7 +479,7 @@ export const generatePosterCanvas = async (
   const halfW = (contentW - 16 * scale) / 2;
   
   const drawMatchCard = (title: string, emoji: string, name: string, reason: string, mx: number, my: number) => {
-    ctx.font = `300 ${13 * scale}px ${FONT_SANS}`;
+    ctx.font = `300 ${13 * scale}px sans-serif`;
     const reasonH = measureTextHeight(ctx, reason, halfW - 32 * scale, 13 * scale * 1.8); // 行高从 1.4 倍放大到 1.8 倍
     const cardH = 80 * scale + reasonH + 24 * scale;
 
@@ -505,14 +491,14 @@ export const generatePosterCanvas = async (
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `500 ${12 * scale}px ${FONT_SANS}`;
+    ctx.font = `500 ${12 * scale}px ${sansFonts}`;
     ctx.fillText(`${emoji} ${title}`, mx + 16 * scale, my + 24 * scale);
 
-    ctx.font = `400 ${20 * scale}px ${FONT_SERIF}`; // 从 400 改 300 会太细, 保留400或300均可，名字使用400比较好
+    ctx.font = `400 ${20 * scale}px ${serifFonts}`; // 从 400 改 300 会太细, 保留400或300均可，名字使用400比较好
     ctx.fillText(name, mx + 16 * scale, my + 56 * scale);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = `300 ${13 * scale}px ${FONT_SANS}`;
+    ctx.font = `300 ${13 * scale}px ${sansFonts}`;
     // 标题和说明直接的间距调整成8px, 说明从 80*scale 变为 56 + 20(字体高) + 8 = 84*scale
     fillTextWrap(ctx, reason, mx + 16 * scale, my + 84 * scale, halfW - 32 * scale, 13 * scale * 1.8); // 行高从 1.4 倍放大到 1.8 倍
 
@@ -540,11 +526,11 @@ export const generatePosterCanvas = async (
   ctx.fillRect(paddingX, y - 80 * scale, contentW, 80 * scale);
 
   ctx.fillStyle = '#f4f0ea';
-  ctx.font = `300 ${32 * scale}px ${FONT_SERIF}`; // 使用300减轻粗细
+  ctx.font = `300 ${32 * scale}px ${serifFonts}`; // 使用300减轻粗细
   ctx.fillText('Energy', paddingX, y);
   ctx.fillText('Distribution', paddingX, y + 36 * scale);
   
-  ctx.font = `300 ${12 * scale}px ${FONT_SANS}`;
+  ctx.font = `300 ${12 * scale}px ${sansFonts}`;
   ctx.globalAlpha = 0.6;
   const distW = ctx.measureText('Distribution').width;
   ctx.fillText('能量分配模型', paddingX + distW + 16 * scale + 120 * scale, y + 36 * scale); // 向右移动120px (这里使用画布坐标系，直接+120*scale, 即实际240像素偏移)
@@ -594,7 +580,7 @@ export const generatePosterCanvas = async (
 
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.globalAlpha = 1.0;
-    ctx.font = `300 ${12 * scale}px ${FONT_SANS}`; // 减轻粗细
+    ctx.font = `300 ${12 * scale}px sans-serif`; // 减轻粗细
     ctx.fillText(item.label, paddingX + 36 * scale, ey + 8 * scale);
 
     ctx.fillStyle = 'rgba(244, 240, 234, 0.9)';
@@ -633,10 +619,10 @@ export const generatePosterCanvas = async (
 
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = `300 ${10 * scale}px ${FONT_SANS}`; // 减轻粗细
+  ctx.font = `300 ${10 * scale}px ${sansFonts}`; // 减轻粗细
   ctx.fillText('ENERGY', donutX, donutY - 4 * scale);
   ctx.fillStyle = 'rgba(244,240,234,0.9)';
-  ctx.font = `300 ${14 * scale}px ${FONT_SERIF}`; // 减轻粗细
+  ctx.font = `300 ${14 * scale}px ${serifFonts}`; // 减轻粗细
   ctx.fillText('100%', donutX, donutY + 12 * scale);
   ctx.textAlign = 'left';
 
@@ -648,7 +634,7 @@ export const generatePosterCanvas = async (
   y = drawSectionTitle("Colleague's View", '同事眼中的你', y);
 
   (result.colleagueView || []).forEach((view: string) => {
-    ctx.font = `300 ${15 * scale}px ${FONT_SERIF}`; // 减轻粗细
+    ctx.font = `300 ${15 * scale}px ${serifFonts}`; // 减轻粗细
     const linesH = measureTextHeight(ctx, view, contentW - 40 * scale, 15 * scale * 1.8);
     const cardH = linesH + 40 * scale;
 
@@ -659,7 +645,7 @@ export const generatePosterCanvas = async (
     ctx.stroke();
 
     ctx.fillStyle = 'rgba(244, 240, 234, 0.8)';
-    ctx.font = `300 ${15 * scale}px ${FONT_SERIF}`; // 减轻粗细
+    ctx.font = `300 ${15 * scale}px ${serifFonts}`; // 减轻粗细
     
     // 文本在卡片内部上下左右居中
     const textY = y + (cardH - linesH) / 2 + 15 * scale * 0.8; // 垂直居中，15*scale*0.8是为了修正baseline偏移
@@ -679,7 +665,7 @@ export const generatePosterCanvas = async (
 
   (result.strategy || []).forEach((strat: string) => {
     ctx.fillStyle = '#d8c39e';
-    ctx.font = `300 ${15 * scale}px ${FONT_SERIF}`; // 减轻粗细
+    ctx.font = `300 ${15 * scale}px ${serifFonts}`; // 减轻粗细
     ctx.fillText('•', paddingX, y + 15 * scale);
     
     ctx.fillStyle = 'rgba(244, 240, 234, 0.8)';
@@ -693,16 +679,16 @@ export const generatePosterCanvas = async (
   // Final Radar Chart
   // ==========================================
   ctx.fillStyle = '#f4f0ea';
-  ctx.font = `400 ${14 * scale}px ${FONT_SANS}`;
+  ctx.font = `400 ${14 * scale}px sans-serif`;
   ctx.globalAlpha = 0.6;
   ctx.textAlign = 'center';
   ctx.fillText('DIMENSION RADAR', W / 2, y);
-  ctx.font = `300 ${10 * scale}px ${FONT_SANS}`; // 减轻粗细
+  ctx.font = `300 ${10 * scale}px sans-serif`; // 减轻粗细
   ctx.globalAlpha = 0.8;
   ctx.fillText('维度雷达', W / 2, y + 16 * scale);
 
   y += 48 * scale;
-  ctx.font = `300 ${11 * scale}px ${FONT_SANS}`; // 减轻粗细
+  ctx.font = `300 ${11 * scale}px sans-serif`; // 减轻粗细
   ctx.globalAlpha = 0.6;
   
   // N B T S 文字居中计算
@@ -766,7 +752,7 @@ export const generatePosterCanvas = async (
   ctx.stroke();
 
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.font = `400 ${10 * scale}px ${FONT_SANS}`;
+  ctx.font = `400 ${10 * scale}px ${sansFonts}`;
   ctx.textAlign = 'center';
   ctx.fillText('N', rg1[0].x, rg1[0].y - 8 * scale);
   ctx.fillText('B', rg1[2].x, rg1[2].y + 16 * scale);
@@ -798,13 +784,13 @@ export const generatePosterCanvas = async (
   // Footer: Scan QR -> Text Only + Signature
   // ==========================================
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.font = `600 ${28 * scale}px ${FONT_SERIF}`;
+  ctx.font = `600 ${28 * scale}px ${serifFonts}`;
   ctx.textAlign = 'center';
   ctx.fillText('NBTI', W / 2, y);
   
   y += 32 * scale;
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.font = `300 ${14 * scale}px ${FONT_SANS}`;
+  ctx.font = `300 ${14 * scale}px ${sansFonts}`;
   ctx.fillText('职场牛马人格诊断', W / 2, y);
 
   y += 64 * scale;
