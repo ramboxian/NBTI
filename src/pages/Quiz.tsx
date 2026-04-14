@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { questions } from '../data/questions';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { questions, questions16 } from '../data/questions';
 
 // 1:1 严格复刻参考图：顶部和底部的对称花草装饰
 const TopBottomOrnament = ({ className }: { className?: string }) => (
@@ -88,13 +88,17 @@ const VintageFrameOverlay = () => (
 
 export default function Quiz() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const mode = location.state?.mode || '30';
+  const activeQuestions = mode === '16' ? questions16 : questions;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scores, setScores] = useState<Record<string, number>>({ N: 0, B: 0, T: 0, S: 0 });
   const [history, setHistory] = useState<Record<string, number>[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({}); // Store selected option id by question index
   const [direction, setDirection] = useState(1);
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = activeQuestions[currentIndex];
 
   const handleOptionClick = (optionId: string, optionScores: Record<string, number>) => {
     // Check if we are re-answering a question
@@ -136,7 +140,7 @@ export default function Quiz() {
 
     // Move to next question or result
     setTimeout(() => {
-      if (currentIndex < questions.length - 1) {
+      if (currentIndex < activeQuestions.length - 1) {
         setDirection(1);
         setCurrentIndex(currentIndex + 1);
       } else {
@@ -147,7 +151,7 @@ export default function Quiz() {
             finalScores[key] += optionScores[key];
           }
         });
-        navigate('/result', { state: { scores: finalScores } });
+        navigate('/result', { state: { scores: finalScores, mode } });
       }
     }, 200); // Add a tiny delay so the user sees their selection highlight before moving
   };
@@ -189,13 +193,13 @@ export default function Quiz() {
         {/* Question Number & Progress - Moved to Top */}
         <div className="w-full flex flex-col items-center justify-center font-sans mb-8 pt-4">
           <span className="text-[12px] uppercase tracking-[0.2em] opacity-50 mb-3">
-            Question {currentIndex + 1 < 10 ? `0${currentIndex + 1}` : currentIndex + 1} / {questions.length}
+            Question {currentIndex + 1 < 10 ? `0${currentIndex + 1}` : currentIndex + 1} / {activeQuestions.length}
           </span>
           <div className="w-48 h-[1px] bg-ink/10">
             <motion.div 
               className="h-full bg-ink/40"
               initial={{ width: 0 }}
-              animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+              animate={{ width: `${((currentIndex + 1) / activeQuestions.length) * 100}%` }}
               transition={{ duration: 0.5 }}
             />
           </div>

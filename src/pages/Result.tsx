@@ -96,6 +96,7 @@ export default function Result() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(true);
   
   // Base64 preload states for html-to-image on Safari
   const [base64Painting, setBase64Painting] = useState<string>('');
@@ -154,15 +155,18 @@ export default function Result() {
   const finalS = scores.S === 0 ? ((scores.N || 0) + (scores.B || 0) + (scores.T || 0) >= 0 ? -1 : 1) : scores.S;
 
   const resultId = `${finalN > 0 ? 'N+' : 'N-'}${finalB > 0 ? 'B+' : 'B-'}${finalT > 0 ? 'T+' : 'T-'}${finalS > 0 ? 'S+' : 'S-'}`;
+  const mode = location.state?.mode || '30';
+  const easterEggThreshold = mode === '16' ? 4 : 5;
+
   const easterEggs: { title: string; desc: string }[] = [];
-  if (scores.N >= 5) easterEggs.push({ title: '🔥 牛马之魂', desc: '你的卷度已超越人类极限。建议检查一下自己是不是被PUA了，或者你其实享受这一切？' });
-  if (scores.N <= -5) easterEggs.push({ title: '🛋️ 究极摸鱼王', desc: '你的摸鱼已臻化境。公司网络一半的流量可能都是你的。不过认真的说——你快乐吗？' });
-  if (scores.B >= 5) easterEggs.push({ title: '🎒 背锅侠本侠', desc: '你已经背了太多锅。提醒一下：靠谱是美德，但不能无限透支。学会说"不"也是一种能力' });
-  if (scores.B <= -5) easterEggs.push({ title: '🏃 闪电甩锅侠', desc: '你的不粘锅属性已满级。任何责任到你这里都会自动反弹。建议偶尔接一个锅——哪怕是空锅' });
-  if (scores.T >= 5) easterEggs.push({ title: '🧠 职场诸葛亮', desc: '你已经活成了一本职场厚黑学。提醒：套路可以有，但真心不能丢。人生不止有KPI' });
-  if (scores.T <= -5) easterEggs.push({ title: '💬 人间直球机', desc: '你的直球程度已经突破大气层。虽然世界需要真诚的人，但偶尔学点"说话的艺术"能救命' });
-  if (scores.S >= 5) easterEggs.push({ title: '🎭 职场奥斯卡', desc: '你的社交戏精属性已经溢出屏幕了。你一个人就能演完一部甄嬛传。' });
-  if (scores.S <= -5) easterEggs.push({ title: '🧊 终极制冷机', desc: '你的高冷已经让周围结冰了。虽然沉默是金，但偶尔当个正常NPC也能省掉很多麻烦。' });
+  if (scores.N >= easterEggThreshold) easterEggs.push({ title: '🔥 牛马之魂', desc: '你的卷度已超越人类极限。建议检查一下自己是不是被PUA了，或者你其实享受这一切？' });
+  if (scores.N <= -easterEggThreshold) easterEggs.push({ title: '🛋️ 究极摸鱼王', desc: '你的摸鱼已臻化境。公司网络一半的流量可能都是你的。不过认真的说——你快乐吗？' });
+  if (scores.B >= easterEggThreshold) easterEggs.push({ title: '🎒 背锅侠本侠', desc: '你已经背了太多锅。提醒一下：靠谱是美德，但不能无限透支。学会说"不"也是一种能力' });
+  if (scores.B <= -easterEggThreshold) easterEggs.push({ title: '🏃 闪电甩锅侠', desc: '你的不粘锅属性已满级。任何责任到你这里都会自动反弹。建议偶尔接一个锅——哪怕是空锅' });
+  if (scores.T >= easterEggThreshold) easterEggs.push({ title: '🧠 职场诸葛亮', desc: '你已经活成了一本职场厚黑学。提醒：套路可以有，但真心不能丢。人生不止有KPI' });
+  if (scores.T <= -easterEggThreshold) easterEggs.push({ title: '💬 人间直球机', desc: '你的直球程度已经突破大气层。虽然世界需要真诚的人，但偶尔学点"说话的艺术"能救命' });
+  if (scores.S >= easterEggThreshold) easterEggs.push({ title: '🎭 职场奥斯卡', desc: '你的社交戏精属性已经溢出屏幕了。你一个人就能演完一部甄嬛传。' });
+  if (scores.S <= -easterEggThreshold) easterEggs.push({ title: '🧊 终极制冷机', desc: '你的高冷已经让周围结冰了。虽然沉默是金，但偶尔当个正常NPC也能省掉很多麻烦。' });
 
   // 如果需要修改结果对象的逻辑可以在这里进行，比如附带彩蛋内容
   let baseResult = resultsData[resultId];
@@ -188,26 +192,44 @@ export default function Result() {
     return () => clearTimeout(timer);
   }, [result.paintingUrl, phase]);
 
+  const loadBase64Image = async (url: string): Promise<string> => {
+    try {
+      // Create a canvas to draw and convert the image, handling CORS properly
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.9));
+          } else {
+            reject(new Error('Failed to get canvas context'));
+          }
+        };
+        img.onerror = reject;
+        // Add cache breaker to prevent CORS issues with cached images
+        img.src = url + '?t=' + new Date().getTime();
+      });
+    } catch (e) {
+      console.error('Failed to load image as base64', e);
+      return '';
+    }
+  };
+
   useEffect(() => {
     if (result?.paintingUrl) {
-      fetch(result.paintingUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onloadend = () => setBase64Painting(reader.result as string);
-          reader.readAsDataURL(blob);
-        })
-        .catch(console.error);
+      loadBase64Image(result.paintingUrl).then(base64 => {
+        if (base64) setBase64Painting(base64);
+      });
     }
     
-    fetch('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png')
-      .then(res => res.blob())
-      .then(blob => {
-        const reader = new FileReader();
-        reader.onloadend = () => setBase64EasterBanner(reader.result as string);
-        reader.readAsDataURL(blob);
-      })
-      .catch(console.error);
+    loadBase64Image('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png').then(base64 => {
+      if (base64) setBase64EasterBanner(base64);
+    });
   }, [result?.paintingUrl]);
 
   const renderLoading = () => (
@@ -703,9 +725,36 @@ export default function Result() {
       )}
 
       {/* Main visible UI */}
-      <div className={`absolute inset-0 z-10 overflow-y-auto no-scrollbar ${phase === 'loading' ? 'invisible' : 'visible'}`}>
+      <div 
+        className={`absolute inset-0 z-10 overflow-y-auto no-scrollbar ${phase === 'loading' ? 'invisible' : 'visible'}`}
+        onScroll={(e) => {
+          if (e.currentTarget.scrollTop > 50) {
+            setShowScrollHint(false);
+          } else {
+            setShowScrollHint(true);
+          }
+        }}
+      >
         {renderResultContent()}
       </div>
+
+      {/* Scroll Down Indicator */}
+      {phase === 'done' && (
+        <div 
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-40 pointer-events-none transition-opacity duration-500 flex flex-col items-center gap-2 ${showScrollHint ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <span className="text-white/60 font-sans text-[11px] tracking-widest uppercase">滑动查看解析</span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-sm"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white/70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </motion.div>
+        </div>
+      )}
 
       {/* Hidden export container with fixed 390px width for consistent 100% pixel-perfect image sizes */}
       <div className="absolute top-0 left-[-9999px] w-[390px] opacity-100 pointer-events-none">

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Home from './pages/Home';
+import ModeSelection from './pages/ModeSelection';
 import Quiz from './pages/Quiz';
 import Result from './pages/Result';
 import AllResults from './pages/AllResults';
@@ -11,6 +12,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
+        <Route path="/mode" element={<ModeSelection />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/result" element={<Result />} />
         <Route path="/all" element={<AllResults />} />

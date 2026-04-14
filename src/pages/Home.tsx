@@ -198,7 +198,7 @@ export default function Home() {
           className="w-full flex justify-center mt-6 shrink-0"
         >
           <button 
-            onClick={() => navigate('/quiz')}
+            onClick={() => navigate('/mode')}
             className="group relative w-full max-w-[320px] py-4 overflow-hidden bg-ink text-canvas transition-all duration-300 active:scale-[0.98]"
           >
             <span className="relative z-10 font-sans text-[11px] uppercase tracking-[0.3em]">

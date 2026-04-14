@@ -1201,3 +1201,7 @@ export const questions: Question[] = [
     ]
   }
 ];
+
+export const questions16: Question[] = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 21, 22
+].map(idx => questions[idx]);
