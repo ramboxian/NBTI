@@ -54,7 +54,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#4A2E2B",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBpTpSp.png",
+    "paintingUrl": "https://i.ibb.co/mFR0N85r/Np-Bp-Tp-Sp.png",
     "colleagueView": [
       "“只要有ta在，项目肯定能成，但跟ta合作真的会脱层皮。”",
       "“卷王之王，感觉ta永远不需要睡觉，回复消息的速度像AI一样。”"
@@ -95,7 +95,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#2C3E50",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBpTpSm.png",
+    "paintingUrl": "https://i.ibb.co/Jjbryr17/Np-Bp-Tp-Sm.png",
     "colleagueView": [
       "“平时没见ta怎么说话，一到交方案的时候直接拿出一个王炸，太猛了。”",
       "“虽然看起来很高冷，但只要你问具体的工作问题，ta会给出最专业的解答。”"
@@ -134,7 +134,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#556B2F",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBpTmSp.png",
+    "paintingUrl": "https://i.ibb.co/Pyd3Pnt/Np-Bp-Tm-Sp.png",
     "colleagueView": [
       "“全公司最好说话的人，找ta帮忙从来不会被拒绝，简直是活菩萨。”",
       "“人是真的好，但有时候觉得ta太累了，替ta感到不值。”"
@@ -173,7 +173,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#8B3A3A",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBpTmSm.png",
+    "paintingUrl": "https://i.ibb.co/PGbTVVTG/Np-Bp-Tm-Sm.png",
     "colleagueView": [
       "“一台没有感情的干活机器，你永远不用担心ta的任务会delay。”",
       "“感觉ta好像活在自己的世界里，除了工作几乎没有任何其他交流。”"
@@ -212,7 +212,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#3B3C36",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBmTpSp.png",
+    "paintingUrl": "https://i.ibb.co/ymVprjR1/Np-Bm-Tp-Sp.png",
     "colleagueView": [
       "“极其聪明，但跟ta合作总觉得哪里不对劲，最后功劳好像都是ta的。”",
       "“老板眼里的红人，同事眼里的老狐狸，永远知道怎么让利益最大化。”"
@@ -247,7 +247,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#2C2E33",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBmTpSm.png",
+    "paintingUrl": "https://i.ibb.co/C51QmGBV/Np-Bm-Tp-Sm.png",
     "colleagueView": [
       "“非常专业，非常高效，但也非常冷血。跟ta只能谈工作，谈不了感情。”",
       "“独行侠，一个人能把活干得很漂亮，但几乎没有任何团队协作精神。”"
@@ -282,7 +282,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#6B4226",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBmTmSp.png",
+    "paintingUrl": "https://i.ibb.co/wNy639rc/Np-Bm-Tm-Sp.png",
     "colleagueView": [
       "“跟ta做同事就像坐过山车，虽然经常被ta的情绪吓到，但ta真的很真实可爱。”",
       "“一点就炸的火药桶，但脾气来得快去得也快，是个性情中人。”"
@@ -317,7 +317,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#2F4F4F",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NpBmTmSm.png",
+    "paintingUrl": "https://i.ibb.co/TDQzWXRs/Np-Bm-Tm-Sm.png",
     "colleagueView": [
       "“技术/能力真的很强，但性格也是真的刚，一般人根本不敢惹ta。”",
       "“感觉ta每天都在跟全世界作对，活得很纯粹，但也真的很累。”"
@@ -352,7 +352,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#5C4033",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBpTpSp.png",
+    "paintingUrl": "https://i.ibb.co/JWqzdYBj/Nm-Bp-Tp-Sp.png",
     "colleagueView": [
       "“看起来每天都在摸鱼，但你问ta什么事，ta比谁都清楚背后的逻辑。”",
       "“职场老中医，看问题一针见血。跟ta聊十分钟，胜读十年职场厚黑学。”"
@@ -387,7 +387,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#4A4A4A",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBpTpSm.png",
+    "paintingUrl": "https://i.ibb.co/MxLWF3h9/Nm-Bp-Tp-Sm.png",
     "colleagueView": [
       "“平时完全感觉不到ta的存在，一出事才发现原来这才是真大佬。”",
       "“极其低调，深不可测。你永远不知道ta的底牌到底有多少。”"
@@ -422,7 +422,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#808000",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBpTmSp.png",
+    "paintingUrl": "https://i.ibb.co/q3y7K1c4/Nm-Bp-Tm-Sp.png",
     "colleagueView": [
       "“组里的开心果和万能胶，脾气超级好，没有ta这个组得散。”",
       "“有时候觉得ta有点可怜，总是被大家使唤，但ta自己好像还挺乐在其中的。”"
@@ -457,7 +457,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#8B4513",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBpTmSm.png",
+    "paintingUrl": "https://i.ibb.co/pjXrffDQ/Nm-Bp-Tm-Sm.png",
     "colleagueView": [
       "“非常老实本分的一个人，什么脏活累活交给ta都能兜底。”",
       "“缺乏主见和攻击性，是个好人，但在职场里容易吃亏。”"
@@ -492,7 +492,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#2F3E46",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBmTpSp.png",
+    "paintingUrl": "https://i.ibb.co/hJLzv7kf/Nm-Bm-Tp-Sp.png",
     "colleagueView": [
       "“滑不留手，太极推手十级学者。你想把锅甩给ta？门都没有。”",
       "“人缘不错，但大家都知道不能跟ta合作硬骨头项目，因为最后肯定是你一个人在扛。”"
@@ -527,7 +527,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#3D3D3D",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBmTpSm.png",
+    "paintingUrl": "https://i.ibb.co/zCB1vsM/Nm-Bm-Tp-Sm.png",
     "colleagueView": [
       "“非常佛系，但感觉ta活得很通透，有一种看破红尘但又在红尘中苟着的智慧。”",
       "“几乎没有任何存在感，每次看到ta都会惊讶：原来ta还在我们公司啊。”"
@@ -562,7 +562,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#363A3D",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBmTmSp.png",
+    "paintingUrl": "https://i.ibb.co/W4WMZWCj/Nm-Bm-Tm-Sp.png",
     "colleagueView": [
       "“全公司的情绪价值担当，没有ta上班得多无聊啊。”",
       "“虽然大家都知道ta在摸鱼，但谁能拒绝一个每天夸你好看、还经常请你喝奶茶的同事呢？”"
@@ -603,7 +603,7 @@ export const resultsData: Record<string, PersonalityResult> = {
     },
     "themeColor": "#8B5A2B",
     "textColor": "#e6d8c3",
-    "paintingUrl": "/images/16/NmBmTmSm.png",
+    "paintingUrl": "https://i.ibb.co/Y7vFYZBN/Nm-Bm-Tm-Sm.png",
     "colleagueView": [
       "“存在感为零。如果有一天ta没来上班，可能要到下午才会被人发现。”",
       "“非常安静，永远都在做自己的事（或者发呆），让人完全没有了解ta的欲望。”"
@@ -614,5 +614,6 @@ export const resultsData: Record<string, PersonalityResult> = {
     ]
   }
 };
+
 
 

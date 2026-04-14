@@ -96,6 +96,10 @@ export default function Result() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Base64 preload states for html-to-image on Safari
+  const [base64Painting, setBase64Painting] = useState<string>('');
+  const [base64EasterBanner, setBase64EasterBanner] = useState<string>('');
 
   const handleExport = async () => {
     if (!containerRef.current) return;
@@ -184,6 +188,28 @@ export default function Result() {
     return () => clearTimeout(timer);
   }, [result.paintingUrl, phase]);
 
+  useEffect(() => {
+    if (result?.paintingUrl) {
+      fetch(result.paintingUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = () => setBase64Painting(reader.result as string);
+          reader.readAsDataURL(blob);
+        })
+        .catch(console.error);
+    }
+    
+    fetch('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png')
+      .then(res => res.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => setBase64EasterBanner(reader.result as string);
+        reader.readAsDataURL(blob);
+      })
+      .catch(console.error);
+  }, [result?.paintingUrl]);
+
   const renderLoading = () => (
     <div 
       className={`w-full h-[100dvh] flex flex-col items-center justify-center bg-canvas text-ink ${
@@ -260,7 +286,6 @@ export default function Result() {
     
     return (
     <div 
-      ref={containerRef}
       style={{ backgroundColor: '#1a1817' }} 
       className="min-h-[100dvh] w-full flex flex-col items-center py-12 px-6 relative"
     >
@@ -284,7 +309,7 @@ export default function Result() {
         >
           <div className="w-full aspect-[4/3] relative rounded-t-[16px] overflow-hidden">
             <img 
-              src={result.paintingUrl} 
+              src={base64Painting || result.paintingUrl} 
               alt={result.name}
               className="w-full h-full object-cover filter contrast-[1.1] sepia-[0.25]"
             />
@@ -367,7 +392,7 @@ export default function Result() {
                   {/* Top Banner Image as a "Hanging Painting" */}
                   <div className="relative w-full z-20">
                     <img 
-                      src="/images/easter-egg-banner.png" 
+                      src={base64EasterBanner || "https://i.ibb.co/CpBWQQzy/easter-egg-banner.png"} 
                       alt="Easter Egg" 
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
                     />
@@ -677,8 +702,20 @@ export default function Result() {
         </button>
       )}
 
+      {/* Main visible UI */}
       <div className={`absolute inset-0 z-10 overflow-y-auto no-scrollbar ${phase === 'loading' ? 'invisible' : 'visible'}`}>
         {renderResultContent()}
+      </div>
+
+      {/* Hidden export container with fixed 390px width for consistent 100% pixel-perfect image sizes */}
+      <div className="absolute top-0 left-[-9999px] w-[390px] opacity-100 pointer-events-none">
+        <div 
+          ref={containerRef}
+          className="w-[390px]"
+          style={{ WebkitTextSizeAdjust: '100%', textSizeAdjust: '100%' }}
+        >
+          {renderResultContent()}
+        </div>
       </div>
 
       {/* Export Loading Overlay */}
@@ -688,7 +725,7 @@ export default function Result() {
             {/* Image section */}
             <div className="w-full h-[220px] bg-[#2a2827] relative overflow-hidden flex items-center justify-center">
               <img 
-                src="/images/angel-download.png" 
+                src="https://i.ibb.co/b5Jhxgmd/angel-download.png" 
                 alt="Downloading" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
