@@ -208,9 +208,9 @@ export default function Result() {
         );
       }
       
-      // 彩蛋横幅因为是本地资源加载极快，顺带预加载一下
+      // 彩蛋横幅预加载
       promises.push(
-        loadBase64Image('/easter-egg-banner.png').then(b64 => {
+        loadBase64Image('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png').then(b64 => {
           if (isMounted && b64) setBase64EasterBanner(b64);
         }).catch(e => console.error("Easter banner preload failed:", e))
       );
@@ -467,7 +467,7 @@ export default function Result() {
                   <div className="relative w-full z-20">
                     <img 
                       crossOrigin="anonymous"
-                      src={base64EasterBanner || "/easter-egg-banner.png"} 
+                      src={base64EasterBanner || "https://i.ibb.co/CpBWQQzy/easter-egg-banner.png"} 
                       alt="Easter Egg" 
                       loading="eager"
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
