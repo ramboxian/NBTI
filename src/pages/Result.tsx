@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
-import { toJpeg } from 'html-to-image';
+import html2canvas from 'html2canvas';
+
+const EASTER_EGG_BANNER_URL = 'https://i.ibb.co/CpBWQQzy/easter-egg-banner.png';
+const DOWNLOAD_ANGEL_URL = 'https://i.ibb.co/b5Jhxgmd/angel-download.png';
 
 const RadarChart = ({ scores, themeColor }: { scores: Record<string, number>, themeColor: string }) => {
   // 按照题库实际的最小/最大值对分数进行归一化 (0到1)
@@ -98,22 +101,17 @@ export default function Result() {
   const [isExporting, setIsExporting] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  
-  // Base64 preload states for html-to-image on Safari
-  const [base64Painting, setBase64Painting] = useState<string>('');
 
   const waitForImage = async (img: HTMLImageElement, timeoutMs = 8000) => {
-    // Ensures the image is fully loaded & decoded before screenshot.
     const start = performance.now();
     while (performance.now() - start < timeoutMs) {
       if (img.complete && img.naturalWidth > 0) {
         try {
-          // decode() is more reliable than relying on onload in iOS/WeChat webviews
           if ('decode' in img) {
             await img.decode();
           }
         } catch {
-          // ignore decode errors; we'll still attempt export
+          // Ignore decode failures and continue with best-effort export.
         }
         return;
       }
@@ -121,70 +119,84 @@ export default function Result() {
     }
   };
 
+  const preloadImage = async (url: string, timeoutMs = 8000) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.decoding = 'async';
+    img.src = url;
+
+    if (img.complete && img.naturalWidth > 0) {
+      try {
+        await img.decode();
+      } catch {
+        // Ignore decode failures during preload.
+      }
+      return;
+    }
+
+    await Promise.race([
+      new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error(`Failed to preload image: ${url}`));
+      }),
+      new Promise<void>((_, reject) => {
+        setTimeout(() => reject(new Error(`Preload timeout: ${url}`)), timeoutMs);
+      })
+    ]);
+
+    try {
+      await img.decode();
+    } catch {
+      // Ignore decode failures during preload.
+    }
+  };
+
   const handleExport = async () => {
     if (!containerRef.current) return;
     try {
       setIsExporting(true);
-      // Give a tiny delay to let UI state update (like hiding the button and showing loading)
       await new Promise(res => setTimeout(res, 100));
 
-      // Make sure all images in the container are fully loaded before capturing
-      // AND explicitly bypass CORS via base64 encoding if needed by replacing src inline before screenshot
       const images = Array.from(containerRef.current.querySelectorAll('img'));
-      
-      // Keep a backup of original sources to restore after screenshot
-      const originalSrcs = new Map<HTMLImageElement, string>();
+      await Promise.all(images.map(img => waitForImage(img)));
 
-      await Promise.all(
-        images.map(async (img) => {
-          // Wait for the image in the export container to actually be ready.
-          await waitForImage(img);
+      await new Promise<void>(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve());
+        });
+      });
 
-          // Skip base64 images as they are already safe
-          if (img.src.startsWith('data:')) return;
-
-          try {
-            // Skip SVG images as they might fail canvas rendering in some mobile browsers
-            if (img.src.includes('.svg')) return;
-
-            // Convert to base64 to avoid canvas tainting / cross-origin decode issues on mobile.
-            const base64 = await loadBase64Image(img.src);
-            if (base64) {
-              originalSrcs.set(img, img.src); // Store only if successful
-              img.src = base64;
-              img.removeAttribute('crossorigin'); // Remove this to avoid CORS error on data URL
-              // Wait for the replaced data URL to decode as well.
-              await waitForImage(img);
-            }
-          } catch (e) {
-            console.warn('Failed to pre-convert image for export', img.src);
-          }
-        })
-      );
-
-      // Give browser a moment to apply the base64 srcs
-      await new Promise(res => setTimeout(res, 300));
-
-      const dataUrl = await toJpeg(containerRef.current, {
-        quality: 0.9,
-        pixelRatio: 2,
+      const canvas = await html2canvas(containerRef.current, {
+        useCORS: true,
+        allowTaint: false,
         backgroundColor: '#1a1817',
-        filter: (node) => {
-          // Exclude elements with data-html2canvas-ignore
-          if (node instanceof HTMLElement && node.dataset && 'html2canvasIgnore' in node.dataset) {
-            return false;
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        imageTimeout: 15000,
+        logging: false,
+        width: containerRef.current.scrollWidth,
+        height: containerRef.current.scrollHeight,
+        windowWidth: containerRef.current.scrollWidth,
+        windowHeight: containerRef.current.scrollHeight,
+        ignoreElements: (node) =>
+          node instanceof HTMLElement && node.dataset && 'html2canvasIgnore' in node.dataset,
+        onclone: (clonedDocument) => {
+          const cloneContainer = clonedDocument.getElementById('result-export-container');
+          if (cloneContainer instanceof HTMLElement) {
+            cloneContainer.style.opacity = '1';
+            cloneContainer.style.pointerEvents = 'none';
           }
-          return true;
-        }
+
+          clonedDocument.querySelectorAll('img').forEach((node) => {
+            if (node instanceof HTMLImageElement) {
+              node.crossOrigin = 'anonymous';
+              node.loading = 'eager';
+              node.decoding = 'sync';
+            }
+          });
+        },
       });
 
-      // Restore original sources
-      originalSrcs.forEach((src, img) => {
-         img.src = src;
-         img.setAttribute('crossorigin', 'anonymous');
-      });
-
-      setGeneratedImage(dataUrl);
+      setGeneratedImage(canvas.toDataURL('image/jpeg', 0.92));
     } catch (err) {
       console.error('Failed to export image', err);
       alert('导出图片失败，请重试');
@@ -244,20 +256,18 @@ export default function Result() {
     let isMounted = true;
     
     const prepareAssets = async () => {
-      // 降低强制等待时间，最长只等 1.5 秒，超时直接展示（因为导出的时候还会重新处理）
       const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const promises: Promise<any>[] = [];
-      
+
+      const promises: Promise<void>[] = [];
+
       if (result?.paintingUrl) {
-        promises.push(
-          loadBase64Image(result.paintingUrl).then(b64 => {
-            if (isMounted && b64) setBase64Painting(b64);
-          }).catch(e => console.error("Painting preload failed:", e))
-        );
+        promises.push(preloadImage(result.paintingUrl).catch(e => console.error('Painting preload failed:', e)));
       }
-      
-      // 最长等待 1.5s，或者所有图片都加载完就立刻进入页面
+
+      if (result?.easterEggs?.length) {
+        promises.push(preloadImage(EASTER_EGG_BANNER_URL).catch(e => console.error('Banner preload failed:', e)));
+      }
+
       await Promise.race([
         Promise.all(promises),
         timeoutPromise
@@ -273,71 +283,7 @@ export default function Result() {
     return () => {
       isMounted = false;
     };
-  }, [result?.paintingUrl, phase]);
-
-  const loadBase64Image = async (url: string): Promise<string> => {
-    try {
-      // 兼容绝对路径（本地资源）与外部 URL
-      const isLocal = url.startsWith('/');
-      const finalUrl = isLocal ? window.location.origin + url : url;
-
-      return new Promise((resolve, reject) => {
-        // 对于微信浏览器和 iOS，使用 XMLHttpRequest 下载 Blob 更可靠
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          const reader = new FileReader();
-          reader.onloadend = function () {
-            const result = reader.result as string;
-            // 检查如果图片需要压缩大小，通过 Canvas 处理
-            const img = new Image();
-            img.onload = () => {
-              let targetWidth = img.width;
-              let targetHeight = img.height;
-              const MAX_SIZE = 800;
-              if (targetWidth > MAX_SIZE || targetHeight > MAX_SIZE) {
-                 const ratio = Math.min(MAX_SIZE / targetWidth, MAX_SIZE / targetHeight);
-                 targetWidth = Math.floor(targetWidth * ratio);
-                 targetHeight = Math.floor(targetHeight * ratio);
-                 const canvas = document.createElement('canvas');
-                 canvas.width = targetWidth;
-                 canvas.height = targetHeight;
-                 const ctx = canvas.getContext('2d');
-                 if (ctx) {
-                   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-                   if (url.toLowerCase().includes('.png')) {
-                     resolve(canvas.toDataURL('image/png'));
-                   } else {
-                     resolve(canvas.toDataURL('image/jpeg', 0.8));
-                   }
-                   return;
-                 }
-              }
-              // 如果不需要压缩，直接返回 xhr 下载到的 base64
-              resolve(result);
-            };
-            img.onerror = () => resolve(result); // 降级返回原 base64
-            img.src = result;
-          };
-          reader.onerror = () => reject(new Error('FileReader error'));
-          reader.readAsDataURL(xhr.response);
-        };
-        xhr.onerror = () => reject(new Error('XHR error'));
-        xhr.open('GET', isLocal ? finalUrl : finalUrl + '?t=' + new Date().getTime());
-        xhr.responseType = 'blob';
-        // 不设置跨域凭证，有时候反而能在微信里拿到资源
-        xhr.send();
-        
-        // Timeout to prevent hanging
-        setTimeout(() => {
-          reject(new Error('Image load timeout'));
-          xhr.abort();
-        }, 5000);
-      });
-    } catch (e) {
-      console.error('Failed to load image as base64', e);
-      return '';
-    }
-  };
+  }, [result?.paintingUrl, result?.easterEggs?.length, phase]);
 
 
 
@@ -441,7 +387,7 @@ export default function Result() {
           <div className="w-full aspect-[4/3] relative rounded-t-[16px] overflow-hidden">
             <img 
               crossOrigin="anonymous"
-              src={base64Painting || result.paintingUrl} 
+              src={result.paintingUrl} 
               alt={result.name}
               loading="eager"
               className="w-full h-full object-cover filter contrast-[1.1] sepia-[0.25]"
@@ -526,7 +472,7 @@ export default function Result() {
                   <div className="relative w-full z-20">
                     <img 
                       crossOrigin="anonymous"
-                      src="/easter-egg-banner.png" 
+                      src={EASTER_EGG_BANNER_URL} 
                       alt="Easter Egg" 
                       loading="eager"
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
@@ -869,9 +815,10 @@ export default function Result() {
         </div>
       )}
 
-      {/* Hidden export container with fixed 390px width for consistent 100% pixel-perfect image sizes */}
-      <div className="absolute top-0 left-[-9999px] w-[390px] opacity-100 pointer-events-none">
+      {/* Keep export DOM in the viewport but visually hidden so WeChat still fully renders its images. */}
+      <div className="fixed top-0 left-0 w-[390px] opacity-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
         <div 
+          id="result-export-container"
           ref={containerRef}
           className="w-[390px]"
           style={{ WebkitTextSizeAdjust: '100%', textSizeAdjust: '100%' }}
@@ -887,7 +834,7 @@ export default function Result() {
             {/* Image section */}
             <div className="w-full h-[220px] bg-[#2a2827] relative overflow-hidden flex items-center justify-center">
               <img 
-                src="/results/angel-download.png" 
+                src={DOWNLOAD_ANGEL_URL} 
                 alt="Downloading" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
