@@ -110,10 +110,22 @@ export default function Result() {
       // Give a tiny delay to let UI state update (like hiding the button and showing loading)
       await new Promise(res => setTimeout(res, 100));
 
+      // Make sure all images in the container are fully loaded before capturing
+      const images = Array.from(containerRef.current.querySelectorAll('img'));
+      await Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve; // Continue even if one fails
+        });
+      }));
+
       const dataUrl = await toJpeg(containerRef.current, {
         quality: 0.9,
         pixelRatio: 2,
         backgroundColor: '#1a1817',
+        cacheBust: true,
+        imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', // transparent 1x1 png
         filter: (node) => {
           // Exclude elements with data-html2canvas-ignore
           if (node instanceof HTMLElement && node.dataset && 'html2canvasIgnore' in node.dataset) {
@@ -183,26 +195,31 @@ export default function Result() {
     let isMounted = true;
     
     const prepareAssets = async () => {
+      // 降低强制等待时间，最长只等 1.5 秒，超时直接展示（因为导出的时候还会重新处理）
+      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1500));
+      
       const promises: Promise<any>[] = [];
       
       if (result?.paintingUrl) {
         promises.push(
           loadBase64Image(result.paintingUrl).then(b64 => {
             if (isMounted && b64) setBase64Painting(b64);
-          })
+          }).catch(e => console.error("Painting preload failed:", e))
         );
       }
       
+      // 彩蛋横幅因为是本地资源加载极快，顺带预加载一下
       promises.push(
         loadBase64Image('/easter-egg-banner.png').then(b64 => {
           if (isMounted && b64) setBase64EasterBanner(b64);
-        })
+        }).catch(e => console.error("Easter banner preload failed:", e))
       );
       
-      const minTimer = new Promise(resolve => setTimeout(resolve, 2500));
-      promises.push(minTimer);
-      
-      await Promise.allSettled(promises);
+      // 最长等待 1.5s，或者所有图片都加载完就立刻进入页面
+      await Promise.race([
+        Promise.all(promises),
+        timeoutPromise
+      ]);
       
       if (isMounted) {
         setPhase('done');
@@ -218,6 +235,10 @@ export default function Result() {
 
   const loadBase64Image = async (url: string): Promise<string> => {
     try {
+      // 兼容绝对路径（本地资源）与外部 URL
+      const isLocal = url.startsWith('/');
+      const finalUrl = isLocal ? window.location.origin + url : url;
+
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -250,7 +271,8 @@ export default function Result() {
           }
         };
         img.onerror = reject;
-        img.src = url + '?t=' + new Date().getTime();
+        // 如果是本地路径，不需要加上时间戳防止缓存，直接读取即可
+        img.src = isLocal ? finalUrl : finalUrl + '?t=' + new Date().getTime();
       });
     } catch (e) {
       console.error('Failed to load image as base64', e);
@@ -362,6 +384,7 @@ export default function Result() {
               crossOrigin="anonymous"
               src={base64Painting || result.paintingUrl} 
               alt={result.name}
+              loading="eager"
               className="w-full h-full object-cover filter contrast-[1.1] sepia-[0.25]"
             />
             <div 
@@ -446,6 +469,7 @@ export default function Result() {
                       crossOrigin="anonymous"
                       src={base64EasterBanner || "/easter-egg-banner.png"} 
                       alt="Easter Egg" 
+                      loading="eager"
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
                     />
                   </div>
