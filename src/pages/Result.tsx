@@ -97,6 +97,7 @@ export default function Result() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   
   // Base64 preload states for html-to-image on Safari
   const [base64Painting, setBase64Painting] = useState<string>('');
@@ -122,10 +123,7 @@ export default function Result() {
         }
       });
 
-      const link = document.createElement('a');
-      link.download = `NBTI-Result-${Date.now()}.jpg`;
-      link.href = dataUrl;
-      link.click();
+      setGeneratedImage(dataUrl);
     } catch (err) {
       console.error('Failed to export image', err);
       alert('导出图片失败，请重试');
@@ -196,7 +194,7 @@ export default function Result() {
       }
       
       promises.push(
-        loadBase64Image('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png').then(b64 => {
+        loadBase64Image('/easter-egg-banner.png').then(b64 => {
           if (isMounted && b64) setBase64EasterBanner(b64);
         })
       );
@@ -240,8 +238,13 @@ export default function Result() {
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-            // Use 0.8 quality to save memory and base64 string size
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            // If it's a PNG image, preserve transparency by using image/png
+            if (url.toLowerCase().includes('.png')) {
+              resolve(canvas.toDataURL('image/png'));
+            } else {
+              // Use 0.8 quality to save memory and base64 string size for JPEGs
+              resolve(canvas.toDataURL('image/jpeg', 0.8));
+            }
           } else {
             reject(new Error('Failed to get canvas context'));
           }
@@ -441,7 +444,7 @@ export default function Result() {
                   <div className="relative w-full z-20">
                     <img 
                       crossOrigin="anonymous"
-                      src={base64EasterBanner || "https://i.ibb.co/CpBWQQzy/easter-egg-banner.png"} 
+                      src={base64EasterBanner || "/easter-egg-banner.png"} 
                       alt="Easter Egg" 
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
                     />
@@ -815,12 +818,40 @@ export default function Result() {
             {/* Content section */}
             <div className="px-6 pt-8 pb-8 flex flex-col items-center w-full">
               <div className="w-10 h-10 border-[3px] border-[#d8c39e]/20 border-t-[#d8c39e] rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(216,195,158,0.2)]"></div>
-              <h3 className="text-[#f4f0ea] font-serif text-[20px] tracking-wide mb-3 font-medium">诊断书下载中...</h3>
+              <h3 className="text-[#f4f0ea] font-serif text-[20px] tracking-wide mb-3 font-medium">诊断书生成中...</h3>
               <p className="text-[#f4f0ea]/60 font-sans text-[13px] tracking-wider text-center leading-relaxed">
                 小天使已经在云端取图了<br/>请耐心等候，马上就好
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Generated Image Overlay for Mobile (Long Press to Save) */}
+      {generatedImage && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-4">
+          <div className="text-white/80 font-sans text-[15px] mb-4 tracking-widest animate-pulse flex items-center gap-2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+            长按图片保存到手机
+          </div>
+          <div className="relative w-full max-w-[390px] max-h-[75vh] overflow-y-auto rounded-xl shadow-2xl no-scrollbar">
+            <img 
+              src={generatedImage} 
+              alt="Diagnosis Result" 
+              className="w-full h-auto pointer-events-auto"
+            />
+          </div>
+          <button 
+            onClick={() => setGeneratedImage(null)}
+            className="mt-6 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 transition-colors backdrop-blur-sm"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       )}
     </div>
