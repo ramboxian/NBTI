@@ -101,7 +101,6 @@ export default function Result() {
   
   // Base64 preload states for html-to-image on Safari
   const [base64Painting, setBase64Painting] = useState<string>('');
-  const [base64EasterBanner, setBase64EasterBanner] = useState<string>('');
 
   const handleExport = async () => {
     if (!containerRef.current) return;
@@ -112,20 +111,21 @@ export default function Result() {
 
       // Make sure all images in the container are fully loaded before capturing
       const images = Array.from(containerRef.current.querySelectorAll('img'));
-      await Promise.all(images.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve; // Continue even if one fails
-        });
-      }));
+      await Promise.race([
+        Promise.all(images.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve; // Continue even if one fails
+          });
+        })),
+        new Promise(resolve => setTimeout(resolve, 1500)) // Max wait 1.5s to prevent hanging
+      ]);
 
       const dataUrl = await toJpeg(containerRef.current, {
         quality: 0.9,
         pixelRatio: 2,
         backgroundColor: '#1a1817',
-        cacheBust: true,
-        imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', // transparent 1x1 png
         filter: (node) => {
           // Exclude elements with data-html2canvas-ignore
           if (node instanceof HTMLElement && node.dataset && 'html2canvasIgnore' in node.dataset) {
@@ -207,13 +207,6 @@ export default function Result() {
           }).catch(e => console.error("Painting preload failed:", e))
         );
       }
-      
-      // 彩蛋横幅预加载
-      promises.push(
-        loadBase64Image('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png').then(b64 => {
-          if (isMounted && b64) setBase64EasterBanner(b64);
-        }).catch(e => console.error("Easter banner preload failed:", e))
-      );
       
       // 最长等待 1.5s，或者所有图片都加载完就立刻进入页面
       await Promise.race([
@@ -467,7 +460,7 @@ export default function Result() {
                   <div className="relative w-full z-20">
                     <img 
                       crossOrigin="anonymous"
-                      src={base64EasterBanner || "https://i.ibb.co/CpBWQQzy/easter-egg-banner.png"} 
+                      src="https://i.ibb.co/CpBWQQzy/easter-egg-banner.png" 
                       alt="Easter Egg" 
                       loading="eager"
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
