@@ -124,10 +124,12 @@ export default function Result() {
            // Skip SVG images as they might fail canvas rendering in some mobile browsers
            if (img.src.includes('.svg')) return;
            
-           originalSrcs.set(img, img.src);
+           // We are converting it now, so store it and replace
            const base64 = await loadBase64Image(img.src);
            if (base64) {
+             originalSrcs.set(img, img.src); // Store only if successful
              img.src = base64;
+             img.removeAttribute('crossorigin'); // Remove this to avoid CORS error on data URL
            }
         } catch (e) {
            console.warn("Failed to pre-convert image for export", img.src);
@@ -153,6 +155,7 @@ export default function Result() {
       // Restore original sources
       originalSrcs.forEach((src, img) => {
          img.src = src;
+         img.setAttribute('crossorigin', 'anonymous');
       });
 
       setGeneratedImage(dataUrl);
@@ -253,50 +256,56 @@ export default function Result() {
       const finalUrl = isLocal ? window.location.origin + url : url;
 
       return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
+        // 对于微信浏览器和 iOS，使用 XMLHttpRequest 下载 Blob 更可靠
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+          const reader = new FileReader();
+          reader.onloadend = function () {
+            const result = reader.result as string;
+            // 检查如果图片需要压缩大小，通过 Canvas 处理
+            const img = new Image();
+            img.onload = () => {
+              let targetWidth = img.width;
+              let targetHeight = img.height;
+              const MAX_SIZE = 800;
+              if (targetWidth > MAX_SIZE || targetHeight > MAX_SIZE) {
+                 const ratio = Math.min(MAX_SIZE / targetWidth, MAX_SIZE / targetHeight);
+                 targetWidth = Math.floor(targetWidth * ratio);
+                 targetHeight = Math.floor(targetHeight * ratio);
+                 const canvas = document.createElement('canvas');
+                 canvas.width = targetWidth;
+                 canvas.height = targetHeight;
+                 const ctx = canvas.getContext('2d');
+                 if (ctx) {
+                   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                   if (url.toLowerCase().includes('.png')) {
+                     resolve(canvas.toDataURL('image/png'));
+                   } else {
+                     resolve(canvas.toDataURL('image/jpeg', 0.8));
+                   }
+                   return;
+                 }
+              }
+              // 如果不需要压缩，直接返回 xhr 下载到的 base64
+              resolve(result);
+            };
+            img.onerror = () => resolve(result); // 降级返回原 base64
+            img.src = result;
+          };
+          reader.onerror = () => reject(new Error('FileReader error'));
+          reader.readAsDataURL(xhr.response);
+        };
+        xhr.onerror = () => reject(new Error('XHR error'));
+        xhr.open('GET', isLocal ? finalUrl : finalUrl + '?t=' + new Date().getTime());
+        xhr.responseType = 'blob';
+        // 不设置跨域凭证，有时候反而能在微信里拿到资源
+        xhr.send();
         
-        // Timeout to prevent hanging if image fails silently
-        const timeoutId = setTimeout(() => {
+        // Timeout to prevent hanging
+        setTimeout(() => {
           reject(new Error('Image load timeout'));
-        }, 3000);
-
-        img.onload = () => {
-          clearTimeout(timeoutId);
-          // Limit dimensions to avoid memory crash on mobile devices
-          let targetWidth = img.width;
-          let targetHeight = img.height;
-          const MAX_SIZE = 800;
-          if (targetWidth > MAX_SIZE || targetHeight > MAX_SIZE) {
-             const ratio = Math.min(MAX_SIZE / targetWidth, MAX_SIZE / targetHeight);
-             targetWidth = Math.floor(targetWidth * ratio);
-             targetHeight = Math.floor(targetHeight * ratio);
-          }
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-            // If it's a PNG image, preserve transparency by using image/png
-            if (url.toLowerCase().includes('.png')) {
-              resolve(canvas.toDataURL('image/png'));
-            } else {
-              // Use 0.8 quality to save memory and base64 string size for JPEGs
-              resolve(canvas.toDataURL('image/jpeg', 0.8));
-            }
-          } else {
-            reject(new Error('Failed to get canvas context'));
-          }
-        };
-        img.onerror = () => {
-          clearTimeout(timeoutId);
-          reject(new Error('Image failed to load'));
-        };
-        
-        // 如果是本地路径，不需要加上时间戳防止缓存，直接读取即可
-        img.src = isLocal ? finalUrl : finalUrl + '?t=' + new Date().getTime();
+          xhr.abort();
+        }, 5000);
       });
     } catch (e) {
       console.error('Failed to load image as base64', e);
