@@ -182,36 +182,71 @@ export default function Result() {
   useEffect(() => {
     if (phase === 'done') return;
 
-    // Preload image
-    const img = new Image();
-    img.src = result.paintingUrl;
+    let isMounted = true;
+    
+    const prepareAssets = async () => {
+      const promises: Promise<any>[] = [];
+      
+      if (result?.paintingUrl) {
+        promises.push(
+          loadBase64Image(result.paintingUrl).then(b64 => {
+            if (isMounted && b64) setBase64Painting(b64);
+          })
+        );
+      }
+      
+      promises.push(
+        loadBase64Image('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png').then(b64 => {
+          if (isMounted && b64) setBase64EasterBanner(b64);
+        })
+      );
+      
+      const minTimer = new Promise(resolve => setTimeout(resolve, 2500));
+      promises.push(minTimer);
+      
+      await Promise.allSettled(promises);
+      
+      if (isMounted) {
+        setPhase('done');
+      }
+    };
+    
+    prepareAssets();
 
-    const timer = setTimeout(() => {
-      setPhase('done');
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [result.paintingUrl, phase]);
+    return () => {
+      isMounted = false;
+    };
+  }, [result?.paintingUrl, phase]);
 
   const loadBase64Image = async (url: string): Promise<string> => {
     try {
-      // Create a canvas to draw and convert the image, handling CORS properly
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
+          // Limit dimensions to avoid memory crash on mobile devices
+          let targetWidth = img.width;
+          let targetHeight = img.height;
+          const MAX_SIZE = 800;
+          if (targetWidth > MAX_SIZE || targetHeight > MAX_SIZE) {
+             const ratio = Math.min(MAX_SIZE / targetWidth, MAX_SIZE / targetHeight);
+             targetWidth = Math.floor(targetWidth * ratio);
+             targetHeight = Math.floor(targetHeight * ratio);
+          }
+          
           const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.9));
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+            // Use 0.8 quality to save memory and base64 string size
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
           } else {
             reject(new Error('Failed to get canvas context'));
           }
         };
         img.onerror = reject;
-        // Add cache breaker to prevent CORS issues with cached images
         img.src = url + '?t=' + new Date().getTime();
       });
     } catch (e) {
@@ -220,17 +255,7 @@ export default function Result() {
     }
   };
 
-  useEffect(() => {
-    if (result?.paintingUrl) {
-      loadBase64Image(result.paintingUrl).then(base64 => {
-        if (base64) setBase64Painting(base64);
-      });
-    }
-    
-    loadBase64Image('https://i.ibb.co/CpBWQQzy/easter-egg-banner.png').then(base64 => {
-      if (base64) setBase64EasterBanner(base64);
-    });
-  }, [result?.paintingUrl]);
+
 
   const renderLoading = () => (
     <div 
@@ -331,6 +356,7 @@ export default function Result() {
         >
           <div className="w-full aspect-[4/3] relative rounded-t-[16px] overflow-hidden">
             <img 
+              crossOrigin="anonymous"
               src={base64Painting || result.paintingUrl} 
               alt={result.name}
               className="w-full h-full object-cover filter contrast-[1.1] sepia-[0.25]"
@@ -414,6 +440,7 @@ export default function Result() {
                   {/* Top Banner Image as a "Hanging Painting" */}
                   <div className="relative w-full z-20">
                     <img 
+                      crossOrigin="anonymous"
                       src={base64EasterBanner || "https://i.ibb.co/CpBWQQzy/easter-egg-banner.png"} 
                       alt="Easter Egg" 
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"

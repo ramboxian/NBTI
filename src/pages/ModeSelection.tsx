@@ -23,7 +23,7 @@ export default function ModeSelection() {
             选择诊断模式
           </h1>
           <p className="font-serif text-[14px] text-ink/70 leading-relaxed text-center px-2">
-            请根据你的时间安排，选择适合的测试版本。
+            请根据你的时间安排，选择合适的版本
           </p>
         </motion.div>
 
