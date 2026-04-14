@@ -110,17 +110,32 @@ export default function Result() {
       await new Promise(res => setTimeout(res, 100));
 
       // Make sure all images in the container are fully loaded before capturing
+      // AND explicitly bypass CORS via base64 encoding if needed by replacing src inline before screenshot
       const images = Array.from(containerRef.current.querySelectorAll('img'));
-      await Promise.race([
-        Promise.all(images.map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve; // Continue even if one fails
-          });
-        })),
-        new Promise(resolve => setTimeout(resolve, 1500)) // Max wait 1.5s to prevent hanging
-      ]);
+      
+      // Keep a backup of original sources to restore after screenshot
+      const originalSrcs = new Map<HTMLImageElement, string>();
+      
+      await Promise.all(images.map(async (img) => {
+        // Skip base64 images as they are already safe
+        if (img.src.startsWith('data:')) return;
+        
+        try {
+           // Skip SVG images as they might fail canvas rendering in some mobile browsers
+           if (img.src.includes('.svg')) return;
+           
+           originalSrcs.set(img, img.src);
+           const base64 = await loadBase64Image(img.src);
+           if (base64) {
+             img.src = base64;
+           }
+        } catch (e) {
+           console.warn("Failed to pre-convert image for export", img.src);
+        }
+      }));
+
+      // Give browser a moment to apply the base64 srcs
+      await new Promise(res => setTimeout(res, 300));
 
       const dataUrl = await toJpeg(containerRef.current, {
         quality: 0.9,
@@ -133,6 +148,11 @@ export default function Result() {
           }
           return true;
         }
+      });
+
+      // Restore original sources
+      originalSrcs.forEach((src, img) => {
+         img.src = src;
       });
 
       setGeneratedImage(dataUrl);
@@ -235,7 +255,14 @@ export default function Result() {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
+        
+        // Timeout to prevent hanging if image fails silently
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Image load timeout'));
+        }, 3000);
+
         img.onload = () => {
+          clearTimeout(timeoutId);
           // Limit dimensions to avoid memory crash on mobile devices
           let targetWidth = img.width;
           let targetHeight = img.height;
@@ -263,7 +290,11 @@ export default function Result() {
             reject(new Error('Failed to get canvas context'));
           }
         };
-        img.onerror = reject;
+        img.onerror = () => {
+          clearTimeout(timeoutId);
+          reject(new Error('Image failed to load'));
+        };
+        
         // 如果是本地路径，不需要加上时间戳防止缓存，直接读取即可
         img.src = isLocal ? finalUrl : finalUrl + '?t=' + new Date().getTime();
       });
