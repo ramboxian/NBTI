@@ -102,6 +102,25 @@ export default function Result() {
   // Base64 preload states for html-to-image on Safari
   const [base64Painting, setBase64Painting] = useState<string>('');
 
+  const waitForImage = async (img: HTMLImageElement, timeoutMs = 8000) => {
+    // Ensures the image is fully loaded & decoded before screenshot.
+    const start = performance.now();
+    while (performance.now() - start < timeoutMs) {
+      if (img.complete && img.naturalWidth > 0) {
+        try {
+          // decode() is more reliable than relying on onload in iOS/WeChat webviews
+          if ('decode' in img) {
+            await img.decode();
+          }
+        } catch {
+          // ignore decode errors; we'll still attempt export
+        }
+        return;
+      }
+      await new Promise(res => setTimeout(res, 50));
+    }
+  };
+
   const handleExport = async () => {
     if (!containerRef.current) return;
     try {
@@ -115,26 +134,33 @@ export default function Result() {
       
       // Keep a backup of original sources to restore after screenshot
       const originalSrcs = new Map<HTMLImageElement, string>();
-      
-      await Promise.all(images.map(async (img) => {
-        // Skip base64 images as they are already safe
-        if (img.src.startsWith('data:')) return;
-        
-        try {
-           // Skip SVG images as they might fail canvas rendering in some mobile browsers
-           if (img.src.includes('.svg')) return;
-           
-           // We are converting it now, so store it and replace
-           const base64 = await loadBase64Image(img.src);
-           if (base64) {
-             originalSrcs.set(img, img.src); // Store only if successful
-             img.src = base64;
-             img.removeAttribute('crossorigin'); // Remove this to avoid CORS error on data URL
-           }
-        } catch (e) {
-           console.warn("Failed to pre-convert image for export", img.src);
-        }
-      }));
+
+      await Promise.all(
+        images.map(async (img) => {
+          // Wait for the image in the export container to actually be ready.
+          await waitForImage(img);
+
+          // Skip base64 images as they are already safe
+          if (img.src.startsWith('data:')) return;
+
+          try {
+            // Skip SVG images as they might fail canvas rendering in some mobile browsers
+            if (img.src.includes('.svg')) return;
+
+            // Convert to base64 to avoid canvas tainting / cross-origin decode issues on mobile.
+            const base64 = await loadBase64Image(img.src);
+            if (base64) {
+              originalSrcs.set(img, img.src); // Store only if successful
+              img.src = base64;
+              img.removeAttribute('crossorigin'); // Remove this to avoid CORS error on data URL
+              // Wait for the replaced data URL to decode as well.
+              await waitForImage(img);
+            }
+          } catch (e) {
+            console.warn('Failed to pre-convert image for export', img.src);
+          }
+        })
+      );
 
       // Give browser a moment to apply the base64 srcs
       await new Promise(res => setTimeout(res, 300));
@@ -500,7 +526,7 @@ export default function Result() {
                   <div className="relative w-full z-20">
                     <img 
                       crossOrigin="anonymous"
-                      src="https://i.ibb.co/CpBWQQzy/easter-egg-banner.png" 
+                      src="/easter-egg-banner.png" 
                       alt="Easter Egg" 
                       loading="eager"
                       className="w-[110%] max-w-[110%] ml-[-5%] h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)]"
@@ -861,7 +887,7 @@ export default function Result() {
             {/* Image section */}
             <div className="w-full h-[220px] bg-[#2a2827] relative overflow-hidden flex items-center justify-center">
               <img 
-                src="https://i.ibb.co/b5Jhxgmd/angel-download.png" 
+                src="/results/angel-download.png" 
                 alt="Downloading" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
