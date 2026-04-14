@@ -57,6 +57,19 @@ export const generatePosterCanvas = async (
   scores: Record<string, number>,
   EASTER_EGG_BANNER_URL: string
 ): Promise<string> => {
+  // 在画图前先强制加载所需的 Web Font (这里等待 document.fonts)
+  // 如果不支持该 API（比如部分老手机），就直接跳过
+  if ('fonts' in document) {
+    try {
+      // 通过加载一段使用该字体的文本，促使浏览器下载并解析
+      await document.fonts.load(`16px "Playfair Display"`);
+      await document.fonts.load(`16px "Noto Serif SC"`);
+      await document.fonts.load(`16px "Songti SC"`);
+    } catch (e) {
+      console.warn('Font loading API error:', e);
+    }
+  }
+
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2d context');
@@ -254,9 +267,9 @@ export const generatePosterCanvas = async (
     
     cy += 32 * scale;
     ctx.globalAlpha = 0.8;
-    ctx.font = `100 ${15 * scale}px ${FONT_SERIF}`; // 正文改成100最细, 字号改成15px
-    // 2.0倍行高对应15px是 30 * scale
-    cy = fillTextWrap(ctx, text, paddingX, cy, contentW, 30 * scale);
+    ctx.font = `300 ${16 * scale}px ${FONT_SERIF}`; // 恢复字重为300，字号恢复为16px
+    // 2.0倍行高对应16px是 32 * scale
+    cy = fillTextWrap(ctx, text, paddingX, cy, contentW, 32 * scale);
     ctx.globalAlpha = 1.0;
 
     return cy + 32 * scale;
