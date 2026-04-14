@@ -1,5 +1,4 @@
 import { loadImage, fillTextWrap, measureTextHeight, roundRect, drawTicketCard, drawDashedLine } from './canvasHelpers';
-import { resultsData } from '../data/results';
 
 export const getLighterColor = (hex: string, lightenFactor = 1.5) => {
   if (!hex) return '#ffffff';
