@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { resultsData } from '../data/results';
-import html2canvas from 'html2canvas';
+import { generatePosterCanvas } from '../utils/canvasPoster';
 
 const EASTER_EGG_BANNER_URL = 'https://i.ibb.co/CpBWQQzy/easter-egg-banner.png';
 const DOWNLOAD_ANGEL_URL = 'https://i.ibb.co/b5Jhxgmd/angel-download.png';
@@ -102,103 +102,18 @@ export default function Result() {
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
-  const waitForImage = async (img: HTMLImageElement, timeoutMs = 8000) => {
-    const start = performance.now();
-    while (performance.now() - start < timeoutMs) {
-      if (img.complete && img.naturalWidth > 0) {
-        try {
-          if ('decode' in img) {
-            await img.decode();
-          }
-        } catch {
-          // Ignore decode failures and continue with best-effort export.
-        }
-        return;
-      }
-      await new Promise(res => setTimeout(res, 50));
-    }
-  };
-
-  const preloadImage = async (url: string, timeoutMs = 8000) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.decoding = 'async';
-    img.src = url;
-
-    if (img.complete && img.naturalWidth > 0) {
-      try {
-        await img.decode();
-      } catch {
-        // Ignore decode failures during preload.
-      }
-      return;
-    }
-
-    await Promise.race([
-      new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error(`Failed to preload image: ${url}`));
-      }),
-      new Promise<void>((_, reject) => {
-        setTimeout(() => reject(new Error(`Preload timeout: ${url}`)), timeoutMs);
-      })
-    ]);
-
-    try {
-      await img.decode();
-    } catch {
-      // Ignore decode failures during preload.
-    }
-  };
-
   const handleExport = async () => {
-    if (!containerRef.current) return;
+    setIsExporting(true);
+    setShowScrollHint(false);
+
     try {
-      setIsExporting(true);
-      await new Promise(res => setTimeout(res, 100));
-
-      const images = Array.from(containerRef.current.querySelectorAll('img'));
-      await Promise.all(images.map(img => waitForImage(img)));
-
-      await new Promise<void>(resolve => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve());
-        });
-      });
-
-      const canvas = await html2canvas(containerRef.current, {
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#1a1817',
-        scale: Math.min(window.devicePixelRatio || 1, 2),
-        imageTimeout: 15000,
-        logging: false,
-        width: containerRef.current.scrollWidth,
-        height: containerRef.current.scrollHeight,
-        windowWidth: containerRef.current.scrollWidth,
-        windowHeight: containerRef.current.scrollHeight,
-        ignoreElements: (node) =>
-          node instanceof HTMLElement && node.dataset && 'html2canvasIgnore' in node.dataset,
-        onclone: (clonedDocument) => {
-          const cloneContainer = clonedDocument.getElementById('result-export-container');
-          if (cloneContainer instanceof HTMLElement) {
-            cloneContainer.style.opacity = '1';
-            cloneContainer.style.pointerEvents = 'none';
-          }
-
-          clonedDocument.querySelectorAll('img').forEach((node) => {
-            if (node instanceof HTMLImageElement) {
-              node.crossOrigin = 'anonymous';
-              node.loading = 'eager';
-              node.decoding = 'sync';
-            }
-          });
-        },
-      });
-
-      setGeneratedImage(canvas.toDataURL('image/jpeg', 0.92));
+      // 增加一个微小的延迟，让UI上的 loading / 按钮状态更新
+      await new Promise(res => setTimeout(res, 50));
+      
+      const dataUrl = await generatePosterCanvas(result, scores, EASTER_EGG_BANNER_URL);
+      setGeneratedImage(dataUrl);
     } catch (err) {
-      console.error('Failed to export image', err);
+      console.error('Export failed:', err);
       alert('导出图片失败，请重试');
     } finally {
       setIsExporting(false);
@@ -255,35 +170,18 @@ export default function Result() {
 
     let isMounted = true;
     
-    const prepareAssets = async () => {
-      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1500));
-
-      const promises: Promise<void>[] = [];
-
-      if (result?.paintingUrl) {
-        promises.push(preloadImage(result.paintingUrl).catch(e => console.error('Painting preload failed:', e)));
-      }
-
-      if (result?.easterEggs?.length) {
-        promises.push(preloadImage(EASTER_EGG_BANNER_URL).catch(e => console.error('Banner preload failed:', e)));
-      }
-
-      await Promise.race([
-        Promise.all(promises),
-        timeoutPromise
-      ]);
-      
+    // 因为已经是本地图片，只需简单等待一小会儿确保 React 完成渲染即可
+    const timer = setTimeout(() => {
       if (isMounted) {
         setPhase('done');
       }
-    };
-    
-    prepareAssets();
+    }, 500);
 
     return () => {
       isMounted = false;
+      clearTimeout(timer);
     };
-  }, [result?.paintingUrl, result?.easterEggs?.length, phase]);
+  }, [phase]);
 
 
 
@@ -386,7 +284,6 @@ export default function Result() {
         >
           <div className="w-full aspect-[4/3] relative rounded-t-[16px] overflow-hidden">
             <img 
-              crossOrigin="anonymous"
               src={result.paintingUrl} 
               alt={result.name}
               loading="eager"
@@ -471,7 +368,6 @@ export default function Result() {
                   {/* Top Banner Image as a "Hanging Painting" */}
                   <div className="relative w-full z-20">
                     <img 
-                      crossOrigin="anonymous"
                       src={EASTER_EGG_BANNER_URL} 
                       alt="Easter Egg" 
                       loading="eager"
